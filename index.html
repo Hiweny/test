@@ -5,47 +5,272 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <title>Meteor Shower</title>
 <style>
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  html, body { width: 100%; height: 100%; overflow: hidden; background: #000; font-family: sans-serif; -webkit-tap-highlight-color: transparent; touch-action: none; }
-  canvas { display: block; position: fixed; top: 0; left: 0; width: 100%; height: 100%; }
-  #bgCanvas { z-index: 1; } #meteorCanvas { z-index: 2; } #fgCanvas { z-index: 3; }
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:100%;height:100%;overflow:hidden;background:#000}
+canvas{display:block;position:fixed;top:0;left:0;width:100%;height:100%}
 </style>
 </head>
 <body>
-<canvas id="bgCanvas"></canvas>
-<canvas id="meteorCanvas"></canvas>
-<canvas id="fgCanvas"></canvas>
+<canvas id="c"></canvas>
 <script>
 (function(){
-const bgC=document.getElementById('bgCanvas'),mC=document.getElementById('meteorCanvas'),fgC=document.getElementById('fgCanvas');
-const bgX=bgC.getContext('2d'),mX=mC.getContext('2d'),fgX=fgC.getContext('2d');
-let W,H,dpr,bgStars=[],constellations=[],meteors=[],fireflies=[],moonData={};
+const c=document.getElementById('c'),ctx=c.getContext('2d');
+let W,H,dpr;
+let meteors=[],starData=[];
+let bgCache=null,groundCache=null;
+
 function R(a,b){return a+Math.random()*(b-a)}
 function RI(a,b){return Math.floor(R(a,b+1))}
+
 function resize(){
-dpr=Math.min(window.devicePixelRatio||1,2);W=window.innerWidth;H=window.innerHeight;
-[bgC,mC,fgC].forEach(c=>{c.width=W*dpr;c.height=H*dpr;c.style.width=W+'px';c.style.height=H+'px'});
-bgX.setTransform(dpr,0,0,dpr,0,0);mX.setTransform(dpr,0,0,dpr,0,0);fgX.setTransform(dpr,0,0,dpr,0,0)}
-function genStars(n){const a=[];for(let i=0;i<n;i++)a.push({x:R(0,W),y:R(0,H*.78),r:R(.3,2),b:R(.3,1),ts:R(.005,.03),to:R(0,Math.PI*2),hc:Math.random()<.12,cl:R(2,6),h:Math.random()<.15?R(200,240):0});return a}
-function genCons(){const g=[];for(let c=0;c<RI(3,5);c++){const cx=R(W*.1,W*.85),cy=R(H*.05,H*.55),ns=[];for(let i=0;i<RI(4,8);i++)ns.push({x:cx+R(-80,80),y:cy+R(-60,60),r:R(1,2.2),b:R(.6,1),gc:Math.random()<.3?'180,210,255':'255,255,255'});const es=[];for(let i=0;i<ns.length;i++)for(let j=i+1;j<ns.length;j++)if(Math.random()<.45)es.push([i,j]);if(!es.length&&ns.length>=2)es.push([0,1]);g.push({nodes:ns,edges:es})}return g}
-function initMoon(){moonData={x:W*.82,y:H*.13,r:Math.min(W,H)*.065,gr:Math.min(W,H)*.12}}
-function drawMoon(ctx){const{x,y,r,gr}=moonData;const mg=ctx.createRadialGradient(x-r*.2,y-r*.2,r*.1,x,y,r);mg.addColorStop(0,'#fff8e8');mg.addColorStop(.4,'#f5e6c8');mg.addColorStop(.75,'#e8d5a3');mg.addColorStop(1,'#d4c080');ctx.fillStyle=mg;ctx.beginPath();ctx.arc(x,y,r,-Math.PI*.35,Math.PI*.55);ctx.arc(x-r*.3,y+r*.1,r*.78,Math.PI*.55,-Math.PI*.35,true);ctx.closePath();ctx.fill();const gl=ctx.createRadialGradient(x,y,r*.5,x,y,gr);gl.addColorStop(0,'rgba(255,240,180,.15)');gl.addColorStop(.5,'rgba(255,220,140,.05)');gl.addColorStop(1,'rgba(255,200,100,0)');ctx.fillStyle=gl;ctx.beginPath();ctx.arc(x,y,gr,0,Math.PI*2);ctx.fill();ctx.fillStyle='rgba(180,160,120,.15)';ctx.beginPath();ctx.arc(x+r*.15,y-r*.15,r*.12,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.arc(x+r*.3,y+r*.05,r*.1,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.arc(x+r*.1,y+r*.25,r*.08,0,Math.PI*2);ctx.fill()}
-function drawGround(ctx){const gy=H*.78;const gg=ctx.createLinearGradient(0,gy,0,H);gg.addColorStop(0,'#0a1f0a');gg.addColorStop(.3,'#061506');gg.addColorStop(.7,'#020a02');gg.addColorStop(1,'#000400');ctx.fillStyle=gg;ctx.beginPath();ctx.moveTo(0,gy);for(let x=0;x<=W;x+=5){const w=Math.sin(x*.004)*8+Math.sin(x*.012+1.5)*5+Math.sin(x*.02+3)*3;ctx.lineTo(x,gy+w)}ctx.lineTo(W,H);ctx.lineTo(0,H);ctx.closePath();ctx.fill();ctx.fillStyle='#0d220d';for(let i=0;i<60;i++){const gx=R(0,W),gy2=gy+R(-5,25);ctx.beginPath();ctx.moveTo(gx,gy2);ctx.quadraticCurveTo(gx-R(3,15),gy2-R(10,35),gx-R(5,20),gy2-R(5,20));ctx.quadraticCurveTo(gx,gy2-R(15,40),gx+R(5,20),gy2-R(5,20));ctx.quadraticCurveTo(gx+R(3,15),gy2-R(10,35),gx,gy2);ctx.fill()}const tg=ctx.createLinearGradient(W*.55,0,W,0);tg.addColorStop(0,'rgba(8,22,8,0)');tg.addColorStop(.5,'rgba(8,22,8,.7)');tg.addColorStop(1,'rgba(6,18,6,.95)');ctx.fillStyle=tg;ctx.beginPath();ctx.moveTo(W*.55,gy);ctx.quadraticCurveTo(W*.6,gy-40,W*.65,gy-20);ctx.quadraticCurveTo(W*.7,gy-55,W*.75,gy-30);ctx.quadraticCurveTo(W*.8,gy-60,W*.85,gy-25);ctx.quadraticCurveTo(W*.9,gy-50,W*.95,gy-15);ctx.quadraticCurveTo(W,gy-30,W,gy);ctx.lineTo(W,H);ctx.lineTo(W*.55,H);ctx.closePath();ctx.fill();ctx.fillStyle='#061806';ctx.beginPath();ctx.moveTo(W*.78,gy);ctx.quadraticCurveTo(W*.8,gy-50,W*.82,gy-35);ctx.quadraticCurveTo(W*.84,gy-70,W*.86,gy-30);ctx.quadraticCurveTo(W*.88,gy-55,W*.9,gy-20);ctx.quadraticCurveTo(W*.92,gy-40,W*.94,gy-10);ctx.quadraticCurveTo(W,gy-20,W,gy);ctx.lineTo(W,H);ctx.lineTo(W*.78,H);ctx.closePath();ctx.fill();for(let i=0;i<40;i++){const fx=R(0,W),fy=gy+R(5,H-gy-10),fr=R(.8,2),a=R(.2,.6);ctx.fillStyle=`rgba(220,230,255,${a})`;ctx.beginPath();ctx.arc(fx,fy,fr,0,Math.PI*2);ctx.fill();const fg2=ctx.createRadialGradient(fx,fy,0,fx,fy,fr*3);fg2.addColorStop(0,`rgba(200,210,255,${a*.5})`);fg2.addColorStop(1,'rgba(200,210,255,0)');ctx.fillStyle=fg2;ctx.beginPath();ctx.arc(fx,fy,fr*3,0,Math.PI*2);ctx.fill()}}
-function initFF(){fireflies=[];const gy=H*.78;for(let i=0;i<30;i++)fireflies.push({x:R(0,W),y:R(gy-20,H-10),r:R(1.5,3.5),ba:R(.3,.8),a:0,p:R(0,Math.PI*2),s:R(.01,.04),dx:R(-.3,.3),dy:R(-.3,.1),h:Math.random()<.3?'180,220,255':'200,230,255'})}
-function updFF(){const gy=H*.78;fireflies.forEach(f=>{f.a=f.ba*(.5+.5*Math.sin(Date.now()*.001*f.s*10+f.p));f.x+=f.dx;f.y+=f.dy;if(f.x<0)f.x=W;if(f.x>W)f.x=0;if(f.y<gy-25)f.y=gy-25;if(f.y>H)f.y=gy+5})}
-function drawFF(ctx){fireflies.forEach(f=>{if(f.a<.05)return;const g=ctx.createRadialGradient(f.x,f.y,0,f.x,f.y,f.r*4);g.addColorStop(0,`rgba(${f.h},${f.a})`);g.addColorStop(.4,`rgba(${f.h},${f.a*.4})`);g.addColorStop(1,`rgba(${f.h},0)`);ctx.fillStyle=g;ctx.beginPath();ctx.arc(f.x,f.y,f.r*4,0,Math.PI*2);ctx.fill();ctx.fillStyle=`rgba(255,255,255,${f.a*.8})`;ctx.beginPath();ctx.arc(f.x,f.y,f.r*.5,0,Math.PI*2);ctx.fill()})}
-function createMeteor(fe){const a=R(-Math.PI*.22,-Math.PI*.58),s=R(2.5,7),vx=Math.cos(a)*s,vy=-Math.sin(a)*s;let x,y;if(fe){if(Math.random()<.6){x=R(-50,W*.3);y=R(-50,H*.15)}else{x=R(-50,W*.15);y=R(-50,H*.35)}}else{x=R(0,W);y=R(0,H*.6)}const fb=Math.random()<.12,hs=fb?R(2.5,4.5):R(1.2,2.8),tl=fb?R(80,200):R(30,120),l=R(40,100),hue=Math.random()<.25?R(235,260):R(200,230);return{x,y,vx,vy,headSize:hs,tailLen:tl,life:l,maxLife:l,isFireball:fb,hue,a:1,trail:[],maxTrail:Math.floor(tl/3)}}
-function initMeteors(){meteors=[];for(let i=0;i<45;i++)meteors.push(createMeteor(false))}
-function updMeteors(){const tc=45+Math.floor(Math.random()*15);while(meteors.length<tc)meteors.push(createMeteor(true));for(let i=meteors.length-1;i>=0;i--){const m=meteors[i];m.life--;m.x+=m.vx;m.y+=m.vy;m.trail.unshift({x:m.x,y:m.y});if(m.trail.length>m.maxTrail)m.trail.pop();m.a=Math.min(1,m.life/(m.maxLife*.3));if(m.life<m.maxLife*.15)m.a=m.life/(m.maxLife*.15);if(m.life<=0||m.x>W+100||m.y>H+100||(m.x<-100&&m.vx<0)||(m.y<-100&&m.vy<0))meteors.splice(i,1)}}
-function drawMeteors(ctx){meteors.forEach(m=>{if(m.a<.02)return;const a=m.a;if(m.trail.length>1){for(let t=0;t<m.trail.length-1;t++){const ta=a*(1-t/m.trail.length)*.7;if(ta<.01)continue;const p0=m.trail[t],p1=m.trail[t+1],w=m.headSize*(1-t/m.trail.length)*.8;ctx.strokeStyle=`rgba(${Math.floor(m.hue)},${Math.floor(m.hue-30)},255,${ta})`;ctx.lineWidth=Math.max(.3,w);ctx.lineCap='round';ctx.beginPath();ctx.moveTo(p0.x,p0.y);ctx.lineTo(p1.x,p1.y);ctx.stroke();ctx.strokeStyle=`rgba(${Math.floor(m.hue)},${Math.floor(m.hue-30)},255,${ta*.3})`;ctx.lineWidth=Math.max(.5,w*2.5);ctx.beginPath();ctx.moveTo(p0.x,p0.y);ctx.lineTo(p1.x,p1.y);ctx.stroke()}}const gr=m.headSize*(m.isFireball?5:3.5);const gl=ctx.createRadialGradient(m.x,m.y,0,m.x,m.y,gr);gl.addColorStop(0,`rgba(${Math.floor(m.hue)},${Math.floor(m.hue-40)},255,${a*.9})`);gl.addColorStop(.3,`rgba(${Math.floor(m.hue)},${Math.floor(m.hue-40)},255,${a*.5})`);gl.addColorStop(.6,`rgba(${Math.floor(m.hue-40)},${Math.floor(m.hue-60)},255,${a*.15})`);gl.addColorStop(1,'rgba(100,120,255,0)');ctx.fillStyle=gl;ctx.beginPath();ctx.arc(m.x,m.y,gr,0,Math.PI*2);ctx.fill();const cr=m.headSize*.6;const co=ctx.createRadialGradient(m.x,m.y,0,m.x,m.y,cr);co.addColorStop(0,`rgba(255,255,255,${a})`);co.addColorStop(.5,`rgba(230,240,255,${a*.9})`);co.addColorStop(1,`rgba(180,200,255,${a*.3})`);ctx.fillStyle=co;ctx.beginPath();ctx.arc(m.x,m.y,cr,0,Math.PI*2);ctx.fill();ctx.fillStyle=`rgba(255,255,255,${a})`;ctx.beginPath();ctx.arc(m.x,m.y,m.headSize*.25,0,Math.PI*2);ctx.fill()})}
-function drawStars(ctx,t){bgStars.forEach(s=>{const tw=.5+.5*Math.sin(t*s.ts+s.to),a=s.b*(.7+.3*tw);if(s.h>0)ctx.fillStyle=`rgba(180,210,255,${a})`;else ctx.fillStyle=`rgba(255,255,255,${a})`;ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,Math.PI*2);ctx.fill();if(s.hc&&tw>.7){const ca=a*(tw-.7)*3;ctx.strokeStyle=`rgba(255,255,255,${ca*.5})`;ctx.lineWidth=.5;const cl=s.cl;ctx.beginPath();ctx.moveTo(s.x-cl,s.y);ctx.lineTo(s.x+cl,s.y);ctx.moveTo(s.x,s.y-cl);ctx.lineTo(s.x,s.y+cl);ctx.stroke();const cd=cl*.6;ctx.beginPath();ctx.moveTo(s.x-cd,s.y-cd);ctx.lineTo(s.x+cd,s.y+cd);ctx.moveTo(s.x+cd,s.y-cd);ctx.lineTo(s.x-cd,s.y+cd);ctx.stroke()}})}
-function drawCons(ctx){constellations.forEach(g=>{ctx.strokeStyle='rgba(255,255,255,.12)';ctx.lineWidth=.6;g.edges.forEach(([a,b])=>{ctx.beginPath();ctx.moveTo(g.nodes[a].x,g.nodes[a].y);ctx.lineTo(g.nodes[b].x,g.nodes[b].y);ctx.stroke()});g.nodes.forEach(n=>{const gl=ctx.createRadialGradient(n.x,n.y,0,n.x,n.y,n.r*3);gl.addColorStop(0,`rgba(${n.gc},${n.b*.8})`);gl.addColorStop(.5,`rgba(${n.gc},${n.b*.2})`);gl.addColorStop(1,`rgba(${n.gc},0)`);ctx.fillStyle=gl;ctx.beginPath();ctx.arc(n.x,n.y,n.r*3,0,Math.PI*2);ctx.fill();ctx.fillStyle=`rgba(${n.gc},${n.b})`;ctx.beginPath();ctx.arc(n.x,n.y,n.r,0,Math.PI*2);ctx.fill()})})}
-function init(){resize();bgStars=genStars(Math.floor(W*H*.0004));constellations=genCons();initMoon();initMeteors();initFF()}
-function drawBG(t){const ctx=bgX;ctx.clearRect(0,0,W,H);ctx.fillStyle='#000205';ctx.fillRect(0,0,W,H);const sg=ctx.createLinearGradient(0,0,0,H);sg.addColorStop(0,'#000308');sg.addColorStop(.5,'#000205');sg.addColorStop(.78,'#010a04');sg.addColorStop(1,'#020d04');ctx.fillStyle=sg;ctx.fillRect(0,0,W,H);drawStars(ctx,t);drawCons(ctx);drawMoon(ctx);drawGround(ctx)}
-function drawFG(){const ctx=fgX;ctx.clearRect(0,0,W,H);drawFF(ctx)}
-function animate(ts){const t=ts*.001;updMeteors();updFF();drawBG(t);mX.clearRect(0,0,W,H);drawMeteors(mX);drawFG();requestAnimationFrame(animate)}
-let rt;window.addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(()=>{resize();bgStars=genStars(Math.floor(W*H*.0004));constellations=genCons();initMoon();initFF()},200)});
-init();requestAnimationFrame(animate);
+  dpr=Math.min(window.devicePixelRatio||1,2);
+  W=window.innerWidth;H=window.innerHeight;
+  c.width=W*dpr;c.height=H*dpr;c.style.width=W+'px';c.style.height=H+'px';
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  bgCache=null;groundCache=null;
+}
+
+// Build background (stars + sky + moon)
+function buildBg(){
+  if(bgCache)return;
+  bgCache=document.createElement('canvas');
+  bgCache.width=W;bgCache.height=H;
+  const b=bgCache.getContext('2d');
+  const sg=b.createLinearGradient(0,0,0,H);
+  sg.addColorStop(0,'#010510');sg.addColorStop(0.5,'#020812');
+  sg.addColorStop(0.78,'#010a05');sg.addColorStop(1,'#020d06');
+  b.fillStyle=sg;b.fillRect(0,0,W,H);
+  starData=[];
+  const n=Math.floor(W*H*0.00065);
+  for(let i=0;i<n;i++){
+    const sx=R(0,W),sy=R(0,H*0.78),sr=R(0.3,2.5);
+    const bright=sr>1.8?R(0.7,1):sr>1.2?R(0.5,0.9):R(0.2,0.7);
+    const ts=R(0.002,0.02),to=R(0,Math.PI*2);
+    const isBlue=Math.random()<0.1;
+    const hasCross=sr>1.8&&Math.random()<0.22;
+    starData.push({x:sx,y:sy,r:sr,b:bright,ts,to,isBlue,hasCross,cl:R(1.5,5)});
+    const a=bright*0.75;
+    b.fillStyle=isBlue?`rgba(155,200,240,${a})`:`rgba(255,255,248,${a})`;
+    b.beginPath();b.arc(sx,sy,sr,0,Math.PI*2);b.fill();
+  }
+  // Constellations
+  for(let g=0;g<RI(2,4);g++){
+    const cx=R(W*0.12,W*0.82),cy=R(H*0.04,H*0.5);
+    const nodes=[];
+    for(let i=0;i<RI(4,7);i++)nodes.push({x:cx+R(-65,65),y:cy+R(-45,45)});
+    b.strokeStyle='rgba(255,255,255,0.06)';b.lineWidth=0.4;
+    for(let i=0;i<nodes.length;i++)for(let j=i+1;j<nodes.length;j++)
+      if(Math.random()<0.35){b.beginPath();b.moveTo(nodes[i].x,nodes[i].y);b.lineTo(nodes[j].x,nodes[j].y);b.stroke()}
+    nodes.forEach(n=>{
+      const g2=b.createRadialGradient(n.x,n.y,0,n.x,n.y,2.5);
+      g2.addColorStop(0,'rgba(195,215,250,0.35)');g2.addColorStop(1,'rgba(195,215,250,0)');
+      b.fillStyle=g2;b.beginPath();b.arc(n.x,n.y,2.5,0,Math.PI*2);b.fill();
+      b.fillStyle='rgba(255,255,255,0.65)';b.beginPath();b.arc(n.x,n.y,1,0,Math.PI*2);b.fill();
+    });
+  }
+  drawMoonOnBg(b);
+}
+
+function drawMoonOnBg(b){
+  const x=W*0.82,y=H*0.11,r=Math.min(W,H)*0.058;
+  b.fillStyle='rgba(20,28,55,0.5)';b.beginPath();b.arc(x,y,r,0,Math.PI*2);b.fill();
+  const mg=b.createRadialGradient(x-r*0.2,y-r*0.12,r*0.03,x+r*0.08,y-r*0.05,r*0.95);
+  mg.addColorStop(0,'#fff8e5');mg.addColorStop(0.3,'#f5e6c0');
+  mg.addColorStop(0.65,'#e8d5a0');mg.addColorStop(1,'#d4c080');
+  b.fillStyle=mg;b.beginPath();
+  b.arc(x,y,r,-Math.PI*0.4,Math.PI*0.5);
+  b.arc(x+r*0.35,y-r*0.1,r*0.75,Math.PI*0.5,-Math.PI*0.4,true);
+  b.closePath();b.fill();
+  b.fillStyle='rgba(175,150,105,0.1)';
+  b.beginPath();b.arc(x+r*0.18,y-r*0.18,r*0.09,0,Math.PI*2);b.fill();
+  b.beginPath();b.arc(x+r*0.08,y+r*0.18,r*0.07,0,Math.PI*2);b.fill();
+  b.beginPath();b.arc(x+r*0.32,y-r*0.04,r*0.05,0,Math.PI*2);b.fill();
+  const gl=b.createRadialGradient(x,y,r*0.3,x,y,r*2);
+  gl.addColorStop(0,'rgba(255,235,170,0.15)');gl.addColorStop(0.5,'rgba(255,220,140,0.04)');
+  gl.addColorStop(1,'rgba(255,200,100,0)');
+  b.fillStyle=gl;b.beginPath();b.arc(x,y,r*2,0,Math.PI*2);b.fill();
+}
+
+// Build ground
+function buildGround(){
+  if(groundCache)return;
+  groundCache=document.createElement('canvas');
+  groundCache.width=W;groundCache.height=H;
+  const g=groundCache.getContext('2d');
+  const gy=H*0.78;
+  const gg=g.createLinearGradient(0,gy,0,H);
+  gg.addColorStop(0,'#0e240e');gg.addColorStop(0.06,'#0a1e0a');
+  gg.addColorStop(0.25,'#061406');gg.addColorStop(0.6,'#020a02');
+  gg.addColorStop(1,'#000400');
+  g.fillStyle=gg;
+  g.beginPath();g.moveTo(0,gy);
+  for(let x=0;x<=W;x+=4){
+    const w=Math.sin(x*0.005)*6+Math.sin(x*0.013+1.2)*3.5+Math.sin(x*0.022+3)*2;
+    g.lineTo(x,gy+w);
+  }
+  g.lineTo(W,H);g.lineTo(0,H);g.closePath();g.fill();
+  g.fillStyle='#0a1e0a';
+  for(let i=0;i<45;i++){
+    const gx=R(0,W),gy2=gy+R(-2,18);
+    g.beginPath();g.moveTo(gx,gy2);
+    g.quadraticCurveTo(gx-R(2,10),gy2-R(6,24),gx-R(3,15),gy2-R(3,14));
+    g.quadraticCurveTo(gx,gy2-R(10,30),gx+R(3,15),gy2-R(3,14));
+    g.quadraticCurveTo(gx+R(2,10),gy2-R(6,24),gx,gy2);
+    g.fill();
+  }
+  g.fillStyle='#061806';
+  g.beginPath();g.moveTo(W*0.58,gy);
+  g.quadraticCurveTo(W*0.62,gy-30,W*0.66,gy-16);
+  g.quadraticCurveTo(W*0.71,gy-42,W*0.76,gy-22);
+  g.quadraticCurveTo(W*0.81,gy-48,W*0.86,gy-20);
+  g.quadraticCurveTo(W*0.91,gy-38,W*0.96,gy-10);
+  g.quadraticCurveTo(W,gy-22,W,gy);
+  g.lineTo(W,H);g.lineTo(W*0.58,H);g.closePath();g.fill();
+  g.fillStyle='#041404';
+  g.beginPath();g.moveTo(W*0.79,gy);
+  g.quadraticCurveTo(W*0.81,gy-38,W*0.83,gy-26);
+  g.quadraticCurveTo(W*0.85,gy-55,W*0.87,gy-22);
+  g.quadraticCurveTo(W*0.89,gy-42,W*0.91,gy-16);
+  g.quadraticCurveTo(W*0.93,gy-30,W*0.95,gy-7);
+  g.quadraticCurveTo(W,gy-16,W,gy);
+  g.lineTo(W,H);g.lineTo(W*0.79,H);g.closePath();g.fill();
+  for(let i=0;i<32;i++){
+    const fx=R(W*0.06,W*0.68),fy=gy+R(6,H-gy-12),fr=R(0.7,2.2),a=R(0.12,0.45);
+    const fg=g.createRadialGradient(fx,fy,0,fx,fy,fr*2.5);
+    fg.addColorStop(0,`rgba(215,225,250,${a})`);fg.addColorStop(1,'rgba(195,205,245,0)');
+    g.fillStyle=fg;g.beginPath();g.arc(fx,fy,fr*2.5,0,Math.PI*2);g.fill();
+    g.fillStyle=`rgba(225,230,248,${a})`;g.beginPath();g.arc(fx,fy,fr,0,Math.PI*2);g.fill();
+  }
+}
+
+// Meteor system
+function spawnMeteor(edge){
+  const angle=R(-Math.PI*0.18,-Math.PI*0.55);
+  const speed=R(3.5,8.5);
+  const vx=Math.cos(angle)*speed,vy=-Math.sin(angle)*speed;
+  let x,y;
+  if(edge){
+    if(Math.random()<0.55){x=R(-60,W*0.22);y=R(-50,H*0.1)}
+    else{x=R(-50,W*0.1);y=R(-50,H*0.3)}
+  }else{x=R(0,W);y=R(0,H*0.5)}
+  const isBright=Math.random()<0.08;
+  const headSize=isBright?R(3,5.5):R(1.5,3.2);
+  const tailLen=isBright?R(110,240):R(40,140);
+  const life=R(55,130);
+  return{x,y,vx,vy,headSize,tailLen,life,maxLife:life,alpha:1,trail:[]};
+}
+
+function initMeteors(){meteors=[];for(let i=0;i<45;i++)meteors.push(spawnMeteor(false))}
+
+function updMeteors(){
+  const target=45+Math.floor(Math.random()*10);
+  while(meteors.length<target)meteors.push(spawnMeteor(true));
+  for(let i=meteors.length-1;i>=0;i--){
+    const m=meteors[i];
+    m.life--;m.x+=m.vx;m.y+=m.vy;
+    m.trail.unshift({x:m.x,y:m.y});
+    if(m.trail.length>Math.floor(m.tailLen/2.5))m.trail.pop();
+    if(m.life<m.maxLife*0.15)m.alpha=m.life/(m.maxLife*0.15);
+    else if(m.life>m.maxLife*0.8)m.alpha=(m.maxLife-m.life)/(m.maxLife*0.2);
+    else m.alpha=1;
+    if(m.life<=0||m.x>W+150||m.y>H+150||m.x<-150||m.y<-150)meteors.splice(i,1);
+  }
+}
+
+// Draw meteors with interpolated trail for smooth gradient
+function drawMeteors(ctx){
+  meteors.forEach(m=>{
+    if(m.alpha<0.04||m.trail.length<3)return;
+    const a=m.alpha;
+    // Interpolate trail (3x density for smooth overlapping circles)
+    const pts=[];
+    for(let i=0;i<m.trail.length-1;i++){
+      const p0=m.trail[i],p1=m.trail[i+1];
+      pts.push(p0);
+      for(let k=1;k<3;k++){
+        const t=k/3;
+        pts.push({x:p0.x+(p1.x-p0.x)*t,y:p0.y+(p1.y-p0.y)*t});
+      }
+    }
+    pts.push(m.trail[m.trail.length-1]);
+    const total=pts.length;
+    for(let i=0;i<total;i++){
+      const tt=i/total;
+      const ptAlpha=a*Math.exp(-2.8*tt);
+      if(ptAlpha<0.003)continue;
+      const p=pts[i];
+      const sz=m.headSize*0.5*(1-tt*0.82);
+      if(sz<0.15)continue;
+      // Outer purple glow
+      const g1=ctx.createRadialGradient(p.x,p.y,0,p.x,p.y,sz*3);
+      g1.addColorStop(0,`rgba(155,175,255,${ptAlpha*0.25})`);
+      g1.addColorStop(0.5,`rgba(135,155,255,${ptAlpha*0.08})`);
+      g1.addColorStop(1,'rgba(115,135,255,0)');
+      ctx.fillStyle=g1;ctx.beginPath();ctx.arc(p.x,p.y,sz*3,0,Math.PI*2);ctx.fill();
+      // Mid blue glow
+      const g2=ctx.createRadialGradient(p.x,p.y,0,p.x,p.y,sz*1.5);
+      g2.addColorStop(0,`rgba(180,200,255,${ptAlpha*0.45})`);
+      g2.addColorStop(0.5,`rgba(165,185,255,${ptAlpha*0.18})`);
+      g2.addColorStop(1,'rgba(145,165,255,0)');
+      ctx.fillStyle=g2;ctx.beginPath();ctx.arc(p.x,p.y,sz*1.5,0,Math.PI*2);ctx.fill();
+      // Core bright
+      const g3=ctx.createRadialGradient(p.x,p.y,0,p.x,p.y,sz*0.6);
+      g3.addColorStop(0,`rgba(215,230,255,${ptAlpha*0.75})`);
+      g3.addColorStop(0.5,`rgba(195,210,255,${ptAlpha*0.35})`);
+      g3.addColorStop(1,'rgba(175,190,255,0)');
+      ctx.fillStyle=g3;ctx.beginPath();ctx.arc(p.x,p.y,sz*0.6,0,Math.PI*2);ctx.fill();
+      // Bright dot
+      ctx.fillStyle=`rgba(255,255,255,${ptAlpha*0.85})`;
+      ctx.beginPath();ctx.arc(p.x,p.y,Math.max(0.15,sz*0.18),0,Math.PI*2);ctx.fill();
+    }
+    // Head glow
+    const gr=m.headSize*4.5;
+    const hg=ctx.createRadialGradient(m.x,m.y,0,m.x,m.y,gr);
+    hg.addColorStop(0,`rgba(230,240,255,${a})`);
+    hg.addColorStop(0.12,`rgba(210,225,255,${a*0.8})`);
+    hg.addColorStop(0.35,`rgba(175,190,255,${a*0.35})`);
+    hg.addColorStop(0.65,`rgba(140,155,255,${a*0.08})`);
+    hg.addColorStop(1,'rgba(120,135,240,0)');
+    ctx.fillStyle=hg;ctx.beginPath();ctx.arc(m.x,m.y,gr,0,Math.PI*2);ctx.fill();
+    const cr=m.headSize*0.65;
+    const cg=ctx.createRadialGradient(m.x,m.y,0,m.x,m.y,cr);
+    cg.addColorStop(0,`rgba(255,255,255,${a})`);
+    cg.addColorStop(0.35,`rgba(240,245,255,${a*0.85})`);
+    cg.addColorStop(0.75,`rgba(200,215,255,${a*0.25})`);
+    cg.addColorStop(1,`rgba(170,185,255,${a*0.05})`);
+    ctx.fillStyle=cg;ctx.beginPath();ctx.arc(m.x,m.y,cr,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle=`rgba(255,255,255,${a})`;
+    ctx.beginPath();ctx.arc(m.x,m.y,Math.max(0.3,m.headSize*0.16),0,Math.PI*2);ctx.fill();
+  });
+}
+
+// Render
+function render(time){
+  ctx.clearRect(0,0,W,H);
+  buildBg();ctx.drawImage(bgCache,0,0);
+  // Twinkling
+  starData.forEach(s=>{
+    const tw=0.5+0.5*Math.sin(time*s.ts+s.to);
+    const alpha=s.b*(0.2*tw);
+    if(alpha<0.04)return;
+    ctx.fillStyle=s.isBlue?`rgba(175,205,245,${alpha})`:`rgba(255,255,245,${alpha})`;
+    ctx.beginPath();ctx.arc(s.x,s.y,s.r*0.45,0,Math.PI*2);ctx.fill();
+    if(s.hasCross&&tw>0.88){
+      const ca=alpha*(tw-0.88)*8,cl=s.cl;
+      ctx.strokeStyle=`rgba(255,255,255,${ca*0.35})`;ctx.lineWidth=0.35;
+      ctx.beginPath();ctx.moveTo(s.x-cl,s.y);ctx.lineTo(s.x+cl,s.y);
+      ctx.moveTo(s.x,s.y-cl);ctx.lineTo(s.x,s.y+cl);ctx.stroke();
+    }
+  });
+  updMeteors();
+  ctx.save();ctx.globalCompositeOperation='lighter';drawMeteors(ctx);ctx.restore();
+  buildGround();ctx.drawImage(groundCache,0,0);
+  requestAnimationFrame(render);
+}
+
+function init(){resize();initMeteors();requestAnimationFrame(render);}
+let rt;window.addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(()=>{resize();initMeteors()},250)});
+init();
 })();
 </script>
 </body>
