@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><defs><radialGradient id='g' cx='50%25' cy='50%25' r='50%25'><stop offset='0%25' stop-color='%23fff'/><stop offset='100%25' stop-color='%237CA8FF'/></radialGradient><filter id='glow'><feGaussianBlur stdDeviation='2' result='b'/><feMerge><feMergeNode in='b'/><feMergeNode in='SourceGraphic'/></feMerge></filter></defs><circle cx='32' cy='32' r='30' fill='%23000'/><polygon points='32,4 38.6,22.9 58.6,23.4 42.7,35.5 40.7,58.6 32,43.2 15.5,54.7 21.4,35.5 5.4,23.4 25.4,22.9' fill='url(%23g)' opacity='.9' filter='url(%23glow)'/><circle cx='32' cy='32' r='7' fill='%23fff' opacity='.25'/></svg>">
 <title>Randomness</title>
 <style>
 *{box-sizing:border-box}
@@ -75,6 +76,15 @@ body{overflow-x:hidden}
 .audio-bar{display:flex;align-items:center;gap:12px;padding:10px 18px 14px}
 .audio-bar audio{flex:1;height:36px;border-radius:10px}
 
+/* Music card */
+.music-card{padding:14px 18px 16px;display:flex;align-items:center;gap:14px}
+.music-cover{width:60px;height:60px;border-radius:14px;object-fit:cover;flex-shrink:0;box-shadow:0 8px 24px rgba(0,0,0,.35);background:rgba(255,255,255,.06)}
+.music-info{flex:1;min-width:0}
+.music-name{font-size:16px;font-weight:650;color:rgba(255,250,235,.92);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.music-artist{font-size:13px;color:rgba(255,250,235,.55);margin-top:4px}
+.music-ctrl{flex-shrink:0}
+.music-ctrl .btn{white-space:nowrap}
+
 /* ===== 城市与自然配色 ===== */
 .glimmer .head{background:linear-gradient(135deg,rgba(25,42,35,.98),rgba(217,204,172,.78));color:#EDEBE2}
 .snowpeak .head{background:linear-gradient(135deg,rgba(21,86,147,.98),rgba(104,162,205,.78));color:#D4E9F4}
@@ -134,7 +144,7 @@ body{overflow-x:hidden}
 <section class="list" id="list"></section>
 </main>
 <script>
-const C='https://corsproxy.io/?';
+const C='https://api.cors.syrins.tech/?url=';
 
 const apis={
 txt:[
@@ -142,15 +152,15 @@ txt:[
   {name:'星座运势',theme:'snowpeak',kind:'zodiac',url:'https://shanhe.kim/api/za/xingzuo.php',proxy:1},
   {name:'历史上的今天',theme:'twilight-t',kind:'history',url:'https://shanhe.kim/api/za/lishi.php',proxy:1},
   {name:'随机抽签',theme:'redstone',kind:'chouq',url:'https://shanhe.kim/api/za/chouq.php',proxy:1},
-  {name:'今日诗词',theme:'seeye',kind:'poem',url:'https://v2.jinrishici.com/one.json'},
+  {name:'今日诗词',theme:'seeye',kind:'poem',url:'https://v2.jinrishici.com/one.json',proxy:1},
   {name:'BugPk 一言',theme:'harbor',kind:'text',url:'https://api.bugpk.com/api/yiyan',proxy:1},
   {name:'Hitokoto 一言',theme:'jasper',kind:'text',url:'https://v1.hitokoto.cn/?encode=text'},
   {name:'土味情话',theme:'sakura',kind:'text',url:'https://api.lovelive.tools/api/SweetNothings',proxy:1},
   {name:'舔狗日记',theme:'southwall',kind:'jsontext',url:'https://shanhe.kim/api/za/tgrj.php?type=json',field:'text',proxy:1},
   {name:'聚合语录',theme:'guard-t',kind:'juhe',url:'https://shanhe.kim/api/za/juhe.php',proxy:1},
   {name:'随机色卡',theme:'',kind:'color',url:'https://shanhe.kim/api/wz/color.php',proxy:1},
-  {name:'出生人口统计',theme:'castle',kind:'text',url:'http://api.yujn.cn/api/sjrk.php',proxy:1},
-  {name:'随机诗经',theme:'windmove',kind:'text',url:'http://api.yujn.cn/api/shijing.php',proxy:1}
+  {name:'出生人口统计',theme:'castle',kind:'text',url:'https://api.yujn.cn/api/sjrk.php',proxy:1},
+  {name:'随机诗经',theme:'windmove',kind:'text',url:'https://api.yujn.cn/api/shijing.php',proxy:1}
 ],
 img:[
   {name:'随机头像',theme:'moon',kind:'direct',url:'https://shanhe.kim/api/tu/avatar.php',proxy:1},
@@ -159,26 +169,28 @@ img:[
   {name:'猫羽雫',theme:'du',kind:'direct',url:'https://shanhe.kim/api/tu/mao.php',proxy:1},
   {name:'随机黑丝',theme:'cres',kind:'jsonimg',url:'https://v2.xxapi.cn/api/heisi'},
   {name:'随机白丝',theme:'lamp',kind:'jsonimg',url:'https://v2.xxapi.cn/api/baisi'},
-  {name:'Cosplay 图集',theme:'forestspring',kind:'cosplay',url:'http://api.yujn.cn/api/cosplay.php',proxy:1},
-  {name:'高质量 ACG',theme:'dreamlake',kind:'direct',url:'http://api.yujn.cn/api/gzl_ACG.php',proxy:1},
-  {name:'随机鲜花',theme:'domefog',kind:'direct',url:'http://api.yujn.cn/api/xianhua.php',proxy:1}
+  {name:'Cosplay 图集',theme:'forestspring',kind:'cosplay',url:'https://api.yujn.cn/api/cosplay.php',proxy:1},
+  {name:'高质量 ACG',theme:'dreamlake',kind:'direct',url:'https://api.yujn.cn/api/gzl_ACG.php',proxy:1},
+  {name:'随机鲜花',theme:'domefog',kind:'direct',url:'https://api.yujn.cn/api/xianhua.php',proxy:1}
 ],
 video:[
-  {name:'小姐姐视频',theme:'autumnfield',kind:'direct',url:'https://api.kuleu.com/api/MP4_xiaojiejie',proxy:1},
-  {name:'随机小姐姐',theme:'watermirror',kind:'direct',url:'http://api.yujn.cn/api/xjj.php',proxy:1},
-  {name:'快手女大学生',theme:'fogdock',kind:'direct',url:'http://api.yujn.cn/api/nvda.php',proxy:1},
-  {name:'综合小姐姐',theme:'lavender',kind:'direct',url:'http://api.yujn.cn/api/juhexjj.php',proxy:1},
-  {name:'身材小姐姐',theme:'ridgeline',kind:'direct',url:'http://api.yujn.cn/api/wmsc.php',proxy:1},
-  {name:'周杰伦歌曲',theme:'lateday',kind:'direct',url:'http://api.yujn.cn/api/jay.php',proxy:1},
-  {name:'玉足视频',theme:'vine',kind:'direct',url:'http://api.yujn.cn/api/jpmt.php',proxy:1},
-  {name:'纯情女高',theme:'greenmist',kind:'direct',url:'http://api.yujn.cn/api/nvgao.php',proxy:1},
-  {name:'随机萝莉',theme:'springmsg',kind:'direct',url:'http://api.yujn.cn/api/luoli.php',proxy:1},
-  {name:'JK 洛丽塔',theme:'summercool',kind:'direct',url:'http://api.yujn.cn/api/jksp.php',proxy:1},
-  {name:'美女慢摇',theme:'yunbian',kind:'direct',url:'http://api.yujn.cn/api/manyao.php',proxy:1}
+  {name:'周杰伦歌曲',theme:'lateday',kind:'video',url:'https://api.yujn.cn/api/jay.php'},
+  {name:'身材小姐姐',theme:'ridgeline',kind:'video',url:'https://api.yujn.cn/api/wmsc.php'},
+  {name:'纯情女高',theme:'greenmist',kind:'video',url:'https://api.yujn.cn/api/nvgao.php'},
+  {name:'随机萝莉',theme:'springmsg',kind:'video',url:'https://api.yujn.cn/api/luoli.php'},
+  {name:'JK 洛丽塔',theme:'summercool',kind:'video',url:'https://api.yujn.cn/api/jksp.php'},
+  {name:'美女慢摇',theme:'yunbian',kind:'video',url:'https://api.yujn.cn/api/manyao.php'},
+  {name:'玉足视频',theme:'vine',kind:'video',url:'https://api.yujn.cn/api/jpmt.php'},
+  {name:'随机小姐姐',theme:'watermirror',kind:'video',url:'https://api.yujn.cn/api/xjj.php'},
+  {name:'小姐姐视频',theme:'autumnfield',kind:'video',url:'https://api.kuleu.com/api/MP4_xiaojiejie'},
+  {name:'综合小姐姐',theme:'lavender',kind:'video',url:'https://api.yujn.cn/api/juhexjj.php'},
+  {name:'快手女大学生',theme:'fogdock',kind:'video',url:'https://api.yujn.cn/api/nvda.php'}
 ],
 audio:[
-  {name:'随机 DJ',theme:'springfield',kind:'audio',url:'http://api.yujn.cn/api/dj.php',proxy:1},
-  {name:'王者荣耀语音',theme:'lightslit',kind:'voice',url:'http://api.yujn.cn/api/wzyyb.php',proxy:1}
+  {name:'随机 DJ',theme:'springfield',kind:'audio',url:'https://api.yujn.cn/api/dj.php',proxy:1},
+  {name:'网易云热歌',theme:'starfall',kind:'music',url:'https://node.api.xfabe.com/api/wangyi/randomMusic?type=json'},
+  {name:'随机酷狗',theme:'dustway',kind:'music',url:'https://v2.xxapi.cn/api/randomkuwo'},
+  {name:'王者荣耀语音',theme:'lightslit',kind:'voice',url:'https://api.yujn.cn/api/wzyyb.php',proxy:1}
 ]};
 const wrap=document.getElementById('wrap'),list=document.getElementById('list'),line=document.getElementById('line');
 let active='',currentAudio=null;
@@ -199,15 +211,15 @@ document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{
 function render(t){
   list.className='list open';
   list.innerHTML=`<div class="list-inner">${apis[t].map((a,i)=>{
-    let isColor=a.kind==='color',isZodiac=a.kind==='zodiac',isVoice=a.kind==='voice',isAudio=a.kind==='audio';
+    let isColor=a.kind==='color',isZodiac=a.kind==='zodiac',isVoice=a.kind==='voice',isAudio=a.kind==='audio'||a.kind==='music';
     let extra='';
     if(isZodiac)extra=`<input class="zodiac-inp" id="zdinp" placeholder="输入星座" value="${getZodiac()}" onclick="event.stopPropagation()" onkeydown="if(event.key==='Enter'){event.stopPropagation();openCard(${i})}">`;
     if(isVoice)extra=`<input class="hero-inp" id="heroinp" placeholder="英雄名" value="李白" onclick="event.stopPropagation()" onkeydown="if(event.key==='Enter'){event.stopPropagation();openCard(${i})}">`;
     let right;
     if(isColor)right='';
-    else if(isAudio)right=`<div class="play-btn" id="pbtn${i}" onclick="event.stopPropagation();toggleAudio(${i})"><div class="tri"></div></div>`;
+    else if(a.kind==='audio')right=`<div class="play-btn" id="pbtn${i}" onclick="event.stopPropagation();toggleAudio(${i})"><div class="tri"></div></div>`;
     else right=`<span class="chev">⌄</span>`;
-    let body=isColor||isAudio?'':`<div class="body" id="b${i}"><div class="inner"></div></div>`;
+    let body=isColor||a.kind==='audio'?'':`<div class="body" id="b${i}"><div class="inner"></div></div>`;
     return `<article class="card ${a.theme}" id="c${i}"><div class="head" onclick="openCard(${i})"><span class="hd-left"><span>${a.name}</span>${extra}</span>${right}</div>${body}</article>`;
   }).join('')}</div>`;
 }
@@ -260,8 +272,9 @@ async function openCard(i){
     card.style.cursor='';return;
   }
 
-  // Audio card - handled by toggleAudio
+  // Audio/Music card - handled by toggleAudio
   if(a.kind==='audio'){toggleAudio(i);return}
+  if(a.kind==='music'){openMusicCard(i);return}
   if(a.kind==='voice'){openVoiceCard(i);return}
 
   let b=document.getElementById('b'+i),inner=b.querySelector('.inner');
@@ -282,25 +295,50 @@ async function openCard(i){
         let imgs=j.data?.images||j.images||[];
         let cid='cs_'+Date.now()+'_'+i;
         carouselState[cid]=0;
-        inner.innerHTML=`<div class="carousel" id="${cid}"><div class="carousel-track" style="transform:translateX(0%)">${imgs.map((src,k)=>`<img src="${src}" onerror="this.style.display='none'" loading="lazy">`).join('')}</div><div class="carousel-arrow left" onclick="carouselShift('${cid}',-1)">‹</div><div class="carousel-arrow right" onclick="carouselShift('${cid}',1)">›</div><div class="carousel-nav">${imgs.map((_,k)=>`<div class="carousel-dot${k===0?' active':''}" onclick="carouselGo('${cid}',${k})"></div>`).join('')}</div></div><div class="actions"><span style="color:rgba(255,255,255,.5);font-size:13px;padding:4px 0">${j.data?.title||''} · ${imgs.length} 张</span></div>`;
+        inner.innerHTML=`<div class="carousel" id="${cid}"><div class="carousel-track" style="transform:translateX(0%)">${imgs.map((src,k)=>`<img id="${cid}_img${k}" src="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 300'><rect fill='%23111' width='400' height='300'/><text fill='%23555' x='200' y='150' text-anchor='middle' dominant-baseline='middle' font-size='14'>加载中...</text></svg>" onerror="this.style.display='none'">`).join('')}</div><div class="carousel-arrow left" onclick="carouselShift('${cid}',-1)">‹</div><div class="carousel-arrow right" onclick="carouselShift('${cid}',1)">›</div><div class="carousel-nav">${imgs.map((_,k)=>`<div class="carousel-dot${k===0?' active':''}" onclick="carouselGo('${cid}',${k})"></div>`).join('')}</div></div><div class="actions"><span style="color:rgba(255,255,255,.5);font-size:13px;padding:4px 0">${esc(j.data?.title||'')} · ${imgs.length} 张</span></div>`;
+        // Load cosplay images via proxy as blob URLs to bypass CORP
+        imgs.forEach((src,k)=>{
+          let imgEl=document.getElementById(cid+'_img'+k);
+          if(!imgEl)return;
+          fetch(C+src.replace(/^http:/,'https:')).then(r=>r.blob()).then(blob=>{
+            imgEl.src=URL.createObjectURL(blob);
+          }).catch(()=>{imgEl.style.display='none'});
+        });
         // Touch swipe
         (function(id,total){let el=document.getElementById(id),sx=0;el.addEventListener('touchstart',e=>{sx=e.touches[0].clientX});el.addEventListener('touchend',e=>{let dx=e.changedTouches[0].clientX-sx;if(Math.abs(dx)>50)carouselShift(id,dx<0?1:-1)})})(cid,imgs.length);
         setTimeout(()=>{let el=document.getElementById(cid);if(el)el.scrollIntoView({behavior:'smooth',block:'center'})},100);
       }else{
         let src=a.url;
-        if(a.kind==='direct'){try{let j=await (await get(a.url+'?type=json',a.proxy)).json();src=j.url||j.imgurl||j.data||j.pic||a.url}catch(_){src=a.url}}
+        if(a.kind==='direct'){
+          if(a.proxy){
+            // Proxy images via blob URL to bypass CORP
+            let imgId='img_'+Date.now()+'_'+i;
+            inner.innerHTML=`<div class="picwrap"><img id="${imgId}" src="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 300'><rect fill='%23111' width='400' height='300'/><text fill='%23555' x='200' y='150' text-anchor='middle' dominant-baseline='middle' font-size='14'>加载中...</text></svg>" onload="setTimeout(()=>this.scrollIntoView({behavior:'smooth',block:'center'}),80)" onerror="this.parentNode.innerHTML='<div class=err>图片加载失败</div>'"></div><div class="actions"><button class="btn" onclick="event.stopPropagation();downloadShown('${imgId}',this)">下载</button></div>`;
+            fetch(C+a.url).then(r=>r.blob()).then(blob=>{
+              let el=document.getElementById(imgId);
+              if(el)el.src=URL.createObjectURL(blob);
+            }).catch(()=>{
+              let el=document.getElementById(imgId);
+              if(el)el.parentNode.innerHTML='<div class=err>图片加载失败</div>';
+            });
+            return;
+          }
+          src=a.url;
+        }
         else if(a.kind==='jsonimg'){let j=await (await get(a.url)).json();src=j.data||j.imgurl||j.url}
         src+=(src.includes('?')?'&':'?')+'t='+Date.now();
         let imgId='img_'+Date.now()+'_'+i;
         inner.innerHTML=`<div class="picwrap"><img id="${imgId}" src="${src}" onload="setTimeout(()=>this.scrollIntoView({behavior:'smooth',block:'center'}),80)" onerror="this.parentNode.innerHTML='<div class=err>图片加载失败</div>'"></div><div class="actions"><button class="btn" onclick="event.stopPropagation();downloadShown('${imgId}',this)">下载</button></div>`;
       }
     }else if(active==='video'){
-      let src=a.url,useProxy=a.proxy;
-      if(a.kind==='direct'){try{let j=await (await get(a.url+'?type=json',a.proxy)).json();src=j.url||j.data||a.url;useProxy=0}catch(_){src=a.url}}
-      else if(a.kind==='jsonvideo'){let j=await (await get(a.url,a.proxy)).json();src=val(j,a.field)||j.url||j.data;useProxy=0}
-      src=(useProxy?C:'')+src+(src.includes('?')?'&':'?')+'t='+Date.now();
+      let src=a.url;
+      if(a.kind==='video'){
+        // Video API returns redirect to mp4, use directly
+        src+=(src.includes('?')?'&':'?')+'_='+Date.now();
+      }
       let vidId='vid_'+Date.now()+'_'+i;
-      inner.innerHTML=`<div class="picwrap"><video id="${vidId}" src="${src}" controls playsinline preload="metadata" onloadedmetadata="setTimeout(()=>this.scrollIntoView({behavior:'smooth',block:'center'}),80)" onerror="this.parentNode.innerHTML='<div class=err>视频加载失败</div>'"></video></div>`;
+      inner.innerHTML=`<div class="picwrap"><video id="${vidId}" src="${src}" controls playsinline preload="auto" onloadedmetadata="setTimeout(()=>this.scrollIntoView({behavior:'smooth',block:'center'}),200)" onerror="this.parentNode.innerHTML='<div class=err>视频加载失败</div>'"></video></div>`;
+      setTimeout(()=>{let v=document.getElementById(vidId);if(v)v.scrollIntoView({behavior:'smooth',block:'center'})},300);
     }else{
       let text='';
       if(a.kind==='jsontext'){let j=await (await get(a.url,a.proxy)).json();text=j[a.field]||j.text||j.msg||JSON.stringify(j)}
@@ -346,16 +384,39 @@ async function openVoiceCard(i){
   }catch(e){inner.innerHTML='<div class="err">语音加载失败，换一个英雄试试。</div>'}
 }
 
+// Music card (网易云热歌)
+async function openMusicCard(i){
+  let a=apis[active][i],card=document.getElementById('c'+i),b=document.getElementById('b'+i),inner=b.querySelector('.inner');
+  if(b.classList.contains('open')){b.classList.remove('open');card.classList.remove('open');return}
+  b.classList.add('open');card.classList.add('open');
+  inner.innerHTML='<div class="load">加载中……</div>';
+  try{
+    let j=await (await get(a.url)).json();
+    let d=j.data||j;
+    let name=d.name||d.title||'未知歌曲',artist=d.artistsname||d.singer||d.artist||'未知歌手',mp3=d.url||d.mp3||'',cover=d.picurl||d.image||'';
+    inner.innerHTML='<div class="music-card">'+(cover?`<img class="music-cover" src="${esc(cover)}" onerror="this.style.display='none'" alt="">`:'')+'<div class="music-info"><div class="music-name">'+esc(name)+'</div><div class="music-artist">'+esc(artist)+'</div></div><div class="music-ctrl">'+(mp3?`<button class="btn" id="mplay${i}" onclick="playMusicUrl('${esc(mp3).replace(/'/g,"\\'")}',this)">▶ 播放</button>`:'<span style="color:rgba(255,255,255,.4);font-size:13px">暂无播放链接</span>')+'</div></div>';
+    setTimeout(()=>{let el=document.getElementById('b'+i);if(el)el.scrollIntoView({behavior:'smooth',block:'center'})},100);
+  }catch(e){inner.innerHTML='<div class="err">歌曲加载失败，换一首试试。</div>'}
+}
+
+function playMusicUrl(url,btn){
+  if(currentAudio){currentAudio.el.pause();document.querySelectorAll('.music-ctrl .btn.ok').forEach(x=>{x.textContent='▶ 播放';x.classList.remove('ok')})}
+  btn.textContent='⏸ 暂停';btn.classList.add('ok');
+  let audio=new Audio(url);
+  audio.play();
+  currentAudio={el:audio,i:-1,url};
+  audio.onended=()=>{btn.textContent='▶ 播放';btn.classList.remove('ok');currentAudio=null};
+  audio.onerror=()=>{btn.textContent='▶ 播放';btn.classList.remove('ok');currentAudio=null};
+}
+
 async function playVoiceItem(el){
   let url=el.dataset.voice;
   if(currentAudio){currentAudio.el.pause();document.querySelectorAll('.voice-item .v-play.playing').forEach(x=>x.classList.remove('playing'))}
   let vp=el.querySelector('.v-play');
   vp.classList.add('playing');
   try{
-    let blobUrl=await (await fetch(C+url+'?_='+Date.now())).blob();
-    let au=URL.createObjectURL(blobUrl);
-    let audio=new Audio(au);audio.play();
-    currentAudio={el:audio,i:-1,url:au};
+    let audio=new Audio(url);audio.play();
+    currentAudio={el:audio,i:-1,url};
     audio.onended=()=>{vp.classList.remove('playing');currentAudio=null};
     audio.onerror=()=>{vp.classList.remove('playing');currentAudio=null};
   }catch(e){vp.classList.remove('playing')}
