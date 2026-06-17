@@ -388,11 +388,13 @@ async function openCard(i){
       b.classList.add('open');card.classList.add('open');
       let src=a.url;
       if(a.kind==='video'){
-        try{let r=await fetch(src+(src.includes('?')?'&':'?')+'_='+Date.now());src=r.url}catch(e){}
+        try{let r=await fetch(src+(src.includes('?')?'&':'?')+'_='+Date.now());if(r.url!==src+(src.includes('?')?'&':'?')+'_='+Date.now())src=r.url}catch(e){}
       }
       let vidId='vid_'+Date.now()+'_'+i;
-      _collectData[i]={type:'video',videoUrl:src,urls:[],title:a.name};
-      inner.innerHTML=`<div class="picwrap"><video id="${vidId}" src="${src}" controls playsinline preload="metadata" onloadedmetadata="setTimeout(()=>this.scrollIntoView({behavior:'smooth',block:'center'}),200)" onstalled="this.play()" onerror="this.parentNode.innerHTML='<div class=err>视频加载失败</div>'"></video></div><div class="actions"><button class="btn ok" onclick="event.stopPropagation();collectMedia(${i})">收藏</button></div>`;
+      // 关键修复：videoUrl 初始为空，等 metadata 加载后由 onloadedmetadata 更新为实际 URL
+      _collectData[i]={type:'video',videoUrl:'',urls:[],title:a.name};
+      // 收藏按钮初始隐藏，等视频 metadata 加载完毕后再显示，确保捕获的是实际视频 URL
+      inner.innerHTML=`<div class="picwrap"><video id="${vidId}" src="${src}" controls playsinline preload="metadata" onloadedmetadata="setTimeout(()=>this.scrollIntoView({behavior:'smooth',block:'center'}),200);var d=_collectData[${i}];if(d){d.videoUrl=this.currentSrc||this.src;var act=document.getElementById('act${i}');if(act)act.innerHTML='<button class=\\'btn ok\\' onclick=\\'event.stopPropagation();collectMedia(${i})\\'>收藏</button>'}" onstalled="this.play()" onerror="this.parentNode.innerHTML='<div class=err>视频加载失败</div>'"></video></div><div class="actions" id="act${i}"><span style="color:rgba(255,255,255,.4);font-size:13px">视频加载中…</span></div>`;
       let v=document.getElementById(vidId);
       if(!videos)videos={};
       videos[vidId]=v;
@@ -538,6 +540,7 @@ function collectMedia(i){
   try{
     const d=_collectData[i];
     if(!d){ alert('收藏数据丢失，请重新展开卡片后再试'); return; }
+    if(d.type==='video' && !d.videoUrl){ alert('视频还在加载中，请稍后再点收藏'); return; }
     loadFav();
     const item={
       id:genId(),platform:'direct',type:d.type,title:d.title||'未命名收藏',author:'',
@@ -546,11 +549,17 @@ function collectMedia(i){
     };
     const exists=favState.items.some(x=>x.sourceUrl&&x.sourceUrl===item.sourceUrl);
     if(exists){alert('已收藏过此内容');return;}
+    // 视频类型：如果是 API 链接（每次返回随机视频），标记为随机源
+    if(d.type==='video' && d.videoUrl && (d.videoUrl.includes('/api/')||d.videoUrl.includes('.php'))){
+      item._apiUrl=d.videoUrl;
+      item.note='⚠️ 此视频来自随机 API，每次打开可能不同。点击下方「刷新」可重新加载。';
+    }
     favState.items.unshift(item);
     saveFav();
     alert('已收藏 ✓');
   }catch(e){ alert('收藏失败：'+e.message); }
 }
+
 async function fetchColor(){
   try{ let r = await fetch(C+'https://shanhe.kim/api/wz/color.php?_='+Date.now()); let t = await r.text(); let c = t.replace(/[^#a-fA-F0-9]/g,'').slice(0,7); if(c.length===7) return c; }catch(e){} return randHex(); }
 function parseUrl(url){
@@ -558,10 +567,10 @@ function parseUrl(url){
   if(!url) return null;
   // 抖音
   let dy = url.match(/douyin\.com\/(?:video|note)\/(\w+)/) || url.match(/v\.douyin\.com\/(\w+)/);
-  if(dy) return { platform:'douyin', type:'video', id:dy[1] };
+  if(dy) return { platform:'douyin', type:'media', id:dy[1] };
   // 小红书
   let xhs = url.match(/xhslink\.com\/(\w+)/) || url.match(/xiaohongshu\.com\/discovery\/item\/(\w+)/);
-  if(xhs) return { platform:'xhs', type:'image', id:xhs[1] };
+  if(xhs) return { platform:'xhs', type:'media', id:xhs[1] };
   // 直接图片 (including API endpoints that return images)
   if(/\.(jpg|jpeg|png|gif|webp|bmp)(\?.*)?$/i.test(url)) return { platform:'direct', type:'image', id:null };
   // 图片API (no extension but known image APIs)
@@ -577,35 +586,58 @@ async function addFavFromUrl(url, apiType){
 
   if(apiType==='douyin' || (apiType==='auto' && parsed.platform==='douyin')){
     try{
-      let r = await fetch('https://api.bugpk.com/api/douyin?url='+encodeURIComponent(url));
+      let apiUrl = C+'https://api.bugpk.com/api/douyin?url='+encodeURIComponent(url);
+      let r = await fetch(apiUrl);
       let j = await r.json();
-      if(j.data){
-        item.title = j.data.title||j.data.desc||'';
-        item.author = j.data.author?.name||j.data.author||'';
-        item.coverUrl = j.data.cover||j.data.coverUrl||'';
-        item.videoUrl = j.data.videoUrl||j.data.video||j.data.url||'';
-        item.mediaUrls = j.data.images||j.data.imgurl||j.data.pics||[];
+      if(j.code===200 && j.data){
+        let d = j.data;
+        item.title = d.title||d.desc||'';
+        item.author = d.author?.name||d.author||'';
+        item.coverUrl = d.cover||d.coverUrl||'';
+        let imgs = d.images||d.imgurl||d.pics||[];
+        let vid = d.url||d.video||d.video_url||d.videoUrl||'';
+        if(d.live_photo&&d.live_photo.length){
+          imgs = d.live_photo.map(i=>i.image).filter(Boolean);
+          if(!vid) vid = d.live_photo[0].video||'';
+        }
+        item.mediaUrls = imgs;
+        item.videoUrl = vid;
         if(item.videoUrl) item.type = 'video';
         else if(item.mediaUrls.length) item.type = 'image';
         item.platform = 'douyin';
+        item.tags = ['douyin'];
+      }else{
+        alert('抖音解析失败：'+(j.msg||'未知错误，请检查链接'));
+        return;
       }
-    }catch(e){}
+    }catch(e){ alert('抖音解析失败：网络错误，请稍后重试'); return; }
   }else if(apiType==='xhs' || (apiType==='auto' && parsed.platform==='xhs')){
     try{
-      let r = await fetch('https://api.bugpk.com/api/xhsjx?url='+encodeURIComponent(url));
+      // 尝试短链接和完整链接两种格式
+      let apiUrl = C+'https://api.bugpk.com/api/xhsjx?url='+encodeURIComponent(url);
+      let r = await fetch(apiUrl);
       let j = await r.json();
-      if(j.data){
-        item.title = j.data.title||j.data.desc||'';
-        item.author = j.data.author?.name||j.data.author||'';
-        item.coverUrl = j.data.cover||j.data.coverUrl||'';
-        item.mediaUrls = j.data.images||j.data.imgurl||j.data.pics||[];
+      if(j.code===200 && j.data){
+        let d = j.data;
+        item.title = d.title||d.desc||'';
+        item.author = d.author?.name||d.author||'';
+        item.coverUrl = d.cover||d.coverUrl||'';
+        let imgs = d.images||d.imgurl||d.pics||[];
+        if(d.live_photo&&d.live_photo.length){
+          imgs = d.live_photo.map(i=>i.image).filter(Boolean);
+        }
+        item.mediaUrls = imgs;
         item.type = item.mediaUrls.length ? 'image' : 'unknown';
         item.platform = 'xhs';
+        item.tags = ['xhs'];
+      }else{
+        alert('小红书解析失败：'+(j.msg||'请检查链接是否正确，或稍后重试'));
+        return;
       }
-    }catch(e){}
+    }catch(e){ alert('小红书解析失败：网络错误，请稍后重试'); return; }
   }else if(apiType==='short'){
     try{
-      let r = await fetch('https://api.bugpk.com/api/short_videos');
+      let r = await fetch(C+'https://api.bugpk.com/api/short_videos');
       let j = await r.json();
       if(j.data){
         item.title = j.data.title||'';
@@ -792,18 +824,19 @@ function renderFavList(){
       if(imgs.length>1){
         const cid = 'favcs_'+it.id;
         favCarouselState[cid]=0;
-        body = `<div class="carousel" id="${cid}"><div class="carousel-track">${imgs.map((src,k)=>`<img data-src="${esc(src)}" onerror="this.style.display='none'" alt="">`).join('')}</div><div class="carousel-arrow left" onclick="favCarouselShift('${cid}',-1)">‹</div><div class="carousel-arrow right" onclick="favCarouselShift('${cid}',1)">›</div><div class="carousel-nav">${imgs.map((_,k)=>`<div class="carousel-dot${k===0?' active':''}" onclick="favCarouselGo('${cid}',${k})"></div>`).join('')}</div></div>`;
-        setTimeout(()=>loadFavCarouselImages(cid),50);
+        body = `<div class="carousel" id="${cid}"><div class="carousel-track">${imgs.map((src,k)=>`<img src="${esc(src)}" referrerpolicy="no-referrer" onerror="favImgFallback(this)" alt="">`).join('')}</div><div class="carousel-arrow left" onclick="favCarouselShift('${cid}',-1)">‹</div><div class="carousel-arrow right" onclick="favCarouselShift('${cid}',1)">›</div><div class="carousel-nav">${imgs.map((_,k)=>`<div class="carousel-dot${k===0?' active':''}" onclick="favCarouselGo('${cid}',${k})"></div>`).join('')}</div></div>`;
       }else if(imgs.length===1){
-        const imgId='favimg_'+it.id;
-        body = `<div class="fav-body"><img id="${imgId}" src="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 300'><rect fill='%23111' width='400' height='300'/><text fill='%23555' x='200' y='150' text-anchor='middle' dominant-baseline='middle' font-size='14'>加载中...</text></svg>" onerror="this.style.display='none'" alt=""></div>`;
-        setTimeout(()=>loadFavImage(imgId,imgs[0]),50);
+        body = `<div class="fav-body"><img src="${esc(imgs[0])}" referrerpolicy="no-referrer" onerror="favImgFallback(this)" alt=""></div>`;
       }else{
         body = '<div class="err">暂无图片</div>';
       }
     }else if(it.type==='video'){
       const src = it.videoUrl || it.sourceUrl;
       body = `<div class="fav-body"><video src="${esc(src)}" controls playsinline preload="metadata" onstalled="this.play()" onerror="this.parentNode.innerHTML='<div class=err>视频加载失败</div>'"></video></div>`;
+      // 随机 API 视频加刷新按钮
+      if(it._apiUrl){
+        body += `<div class="fav-actions"><button class="btn" onclick="refreshFavVideo(this,'${it.id}')">🔄 刷新视频</button></div>`;
+      }
     }else{
       body = `<div class="fav-body" style="padding:18px;color:rgba(255,255,255,.6)">无法预览此类型收藏</div>`;
     }
@@ -819,6 +852,28 @@ function renderFavList(){
   }).join('');
 }
 
+// 收藏图片加载失败时的回退：通过 CORS 代理重试
+function favImgFallback(img){
+  if(img.dataset.retried) return;
+  img.dataset.retried='1';
+  fetch(C+img.src).then(r=>r.blob()).then(blob=>{
+    img.src=URL.createObjectURL(blob);
+  }).catch(()=>{img.style.display='none'});
+}
+
+// 刷新随机 API 视频
+function refreshFavVideo(btn, id){
+  let item = favState.items.find(x=>x.id===id);
+  if(!item||!item._apiUrl) return;
+  let card = btn.closest('.fav-card');
+  let video = card.querySelector('video');
+  if(video){
+    video.src = item._apiUrl + (item._apiUrl.includes('?')?'&':'?') + '_=' + Date.now();
+    video.load();
+    video.play();
+  }
+}
+
 function favCarouselShift(cid,dir){
   const el=document.getElementById(cid),track=el.querySelector('.carousel-track'),dots=el.querySelectorAll('.carousel-dot');
   const total=dots.length,idx=( (favCarouselState[cid]||0) + dir + total ) % total;
@@ -830,19 +885,6 @@ function favCarouselGo(cid,idx){
   const el=document.getElementById(cid),track=el.querySelector('.carousel-track'),dots=el.querySelectorAll('.carousel-dot');
   favCarouselState[cid]=idx; track.style.transform=`translateX(-${idx*100}%)`;
   dots.forEach((d,k)=>d.classList.toggle('active',k===idx));
-}
-async function loadFavImage(imgId,url){
-  try{ let r=await fetch(C+url); let b=await r.blob(); let u=URL.createObjectURL(b); let img=document.getElementById(imgId); if(img)img.src=u; }
-  catch(e){ let img=document.getElementById(imgId); if(img)img.style.display='none'; }
-}
-async function loadFavCarouselImages(cid){
-  const el=document.getElementById(cid); if(!el)return;
-  const imgs=el.querySelectorAll('img[data-src]');
-  for(let img of imgs){
-    let src=img.dataset.src; if(!src)continue;
-    try{ let r=await fetch(C+src); let b=await r.blob(); img.src=URL.createObjectURL(b); }
-    catch(e){ img.style.display='none'; }
-  }
 }
 
 // Back to top: show only when scrolling UP
