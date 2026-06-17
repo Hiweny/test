@@ -84,9 +84,6 @@ body{overflow-x:hidden}
 .music-artist{font-size:13px;color:rgba(255,250,235,.55);margin-top:4px}
 .music-ctrl{flex-shrink:0}
 .music-ctrl .btn{white-space:nowrap}
-/* Bottle */
-.bottle-type{font-size:13px;padding:6px 12px;border-radius:20px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);color:rgba(255,255,255,.65);transition:all .2s}
-.bottle-type.on{background:rgba(100,180,255,.18);border-color:rgba(100,180,255,.35);color:#fff}
 .bubble{display:inline-block;padding:12px 16px;border-radius:16px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.82);font-size:14px;line-height:1.7;white-space:pre-wrap;word-break:break-word}
 
 /* ===== 城市与自然配色 ===== */
@@ -164,8 +161,7 @@ txt:[
   {name:'聚合语录',theme:'guard-t',kind:'juhe',url:'https://shanhe.kim/api/za/juhe.php',proxy:1},
   {name:'随机色卡',theme:'',kind:'color',url:'https://shanhe.kim/api/wz/color.php',proxy:1},
   {name:'出生人口统计',theme:'castle',kind:'text',url:'https://api.yujn.cn/api/sjrk.php',proxy:1},
-  {name:'随机诗经',theme:'windmove',kind:'text',url:'https://api.yujn.cn/api/shijing.php',proxy:1},
-  {name:'漂流瓶',theme:'seeye',kind:'bottle',url:'https://api.yujn.cn/api/plp.php',proxy:1}
+  {name:'随机诗经',theme:'windmove',kind:'text',url:'https://api.yujn.cn/api/shijing.php',proxy:1}
 ],
 img:[
   {name:'随机头像',theme:'moon',kind:'direct',url:'https://shanhe.kim/api/tu/avatar.php',proxy:1},
@@ -227,11 +223,10 @@ document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{
 function render(t){
   list.className='list open';
   list.innerHTML=`<div class="list-inner">${apis[t].map((a,i)=>{
-    let isColor=a.kind==='color',isZodiac=a.kind==='zodiac',isVoice=a.kind==='voice',isAudio=a.kind==='audio'||a.kind==='music',isBottle=a.kind==='bottle';
+    let isColor=a.kind==='color',isZodiac=a.kind==='zodiac',isVoice=a.kind==='voice',isAudio=a.kind==='audio'||a.kind==='music';
     let extra='';
     if(isZodiac)extra=`<input class="zodiac-inp" id="zdinp" placeholder="输入星座" value="${getZodiac()}" onclick="event.stopPropagation()" onkeydown="if(event.key==='Enter'){event.stopPropagation();openCard(${i})}">`;
     if(isVoice)extra=`<input class="hero-inp" id="heroinp" placeholder="英雄名" value="李白" onclick="event.stopPropagation()" onkeydown="if(event.key==='Enter'){event.stopPropagation();openCard(${i})}">`;
-    if(isBottle)extra=`<div style="display:flex;align-items:center;gap:6px" onclick="event.stopPropagation()"><input class="zodiac-inp" id="uin${i}" placeholder="QQ号" style="width:80px"><input class="zodiac-inp" id="grp${i}" placeholder="群号" style="width:80px"></div>`;
     let right;
     if(isColor)right='';
     else if(a.kind==='audio')right=`<div class="play-btn" id="pbtn${i}" onclick="event.stopPropagation();toggleAudio(${i})"><div class="tri"></div></div>`;
@@ -254,8 +249,8 @@ function fmtZodiac(raw){
   return (meta?meta+'\n\n':'')+sections.join('\n\n');
 }
 
-// Audio toggle
-async function toggleAudio(i){
+// Audio toggle - use blob+then chain to preserve user gesture
+function toggleAudio(i){
   let a=apis[active][i],btn=document.getElementById('pbtn'+i);
   if(currentAudio&&currentAudio.i===i&&!currentAudio.el.paused){
     currentAudio.el.pause();btn.classList.remove('playing');
@@ -263,17 +258,17 @@ async function toggleAudio(i){
   }
   if(currentAudio){currentAudio.el.pause();let pb=document.getElementById('pbtn'+currentAudio.i);if(pb)pb.classList.remove('playing')}
   btn.classList.add('playing');
-  try{
-    let src=a.url;
-    if(a.kind==='voice'){let inp=document.getElementById('heroinp'),h=inp?inp.value.trim()||'李白':'李白';src=a.url+'?msg='+encodeURIComponent(h)}
-    let blobUrl=await (await get(src,a.proxy)).blob();
-    let url=URL.createObjectURL(blobUrl);
-    let el=new Audio(url);el.play();
-    currentAudio={el,i,url};
-    btn.classList.add('playing');
+  let src=a.url;
+  if(a.kind==='voice'){let inp=document.getElementById('heroinp'),h=inp?inp.value.trim()||'李白':'李白';src=a.url+'?msg='+encodeURIComponent(h)}
+  let url=(a.proxy?C:'')+src+'?_='+Date.now();
+  fetch(url).then(r=>r.blob()).then(blob=>{
+    let blobUrl=URL.createObjectURL(blob);
+    let el=new Audio(blobUrl);
+    el.play().catch(()=>{btn.classList.remove('playing')});
+    currentAudio={el,i,url:blobUrl};
     el.onended=()=>{btn.classList.remove('playing');currentAudio=null};
     el.onerror=()=>{btn.classList.remove('playing');currentAudio=null};
-  }catch(e){btn.classList.remove('playing')}
+  }).catch(()=>{btn.classList.remove('playing')});
 }
 
 // Carousel state
@@ -289,11 +284,10 @@ async function openCard(i){
     card.style.cursor='';return;
   }
 
-  // Audio/Music/Voice/Bottle card
+  // Audio/Music/Voice card
   if(a.kind==='audio'){toggleAudio(i);return}
   if(a.kind==='music'){openMusicCard(i);return}
   if(a.kind==='voice'){openVoiceCard(i);return}
-  if(a.kind==='bottle'){openBottleCard(i);return}
 
   let b=document.getElementById('b'+i),inner=b.querySelector('.inner');
 
@@ -405,56 +399,6 @@ async function openVoiceCard(i){
     inner.innerHTML=`<div class="voice-card"><div class="voice-hero"><img src="${j.img||''}" onerror="this.style.display='none'" alt=""><span>${esc(j.hero||h)}</span></div><div class="voice-list">${items.map((v,k)=>`<div class="voice-item" data-voice="${esc(v.voice)}" onclick="playVoiceItem(this)"><div class="v-play"><div class="vtri"></div></div><span class="v-text">${esc(v.lines)}</span></div>`).join('')}</div></div>`;
     setTimeout(()=>{let el=document.getElementById('b'+i);if(el)el.scrollIntoView({behavior:'smooth',block:'center'})},100);
   }catch(e){inner.innerHTML='<div class="err">语音加载失败，换一个英雄试试。</div>'}
-}
-
-// Bottle card (漂流瓶)
-async function openBottleCard(i){
-  let a=apis[active][i],card=document.getElementById('c'+i),b=document.getElementById('b'+i),inner=b.querySelector('.inner');
-  if(b.classList.contains('open')){b.classList.remove('open');card.classList.remove('open');return}
-  b.classList.add('open');card.classList.add('open');
-  let uin=document.getElementById('uin'+i),grp=document.getElementById('grp'+i);
-  let u=uin?uin.value.trim():'',g=grp?grp.value.trim():'';
-  if(!u||!g){inner.innerHTML='<div class="err">请先在头部输入 QQ 号和群号</div>';return}
-  inner.innerHTML=`<div class="bottle-form" style="padding:14px 18px 8px">
-    <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap">
-      <button class="btn bottle-type on" data-type="1" onclick="event.stopPropagation();bottleSetType(this)">🎣 捞瓶子</button>
-      <button class="btn bottle-type" data-type="2" onclick="event.stopPropagation();bottleSetType(this)">📝 扔瓶子</button>
-      <button class="btn bottle-type" data-type="3" onclick="event.stopPropagation();bottleSetType(this)">💬 回复瓶子</button>
-    </div>
-    <div class="bottle-extra" id="bextra${i}" style="margin-bottom:8px"></div>
-    <button class="btn ok" style="width:100%" onclick="event.stopPropagation();bottleDo(${i})">🚀 执行</button>
-  </div>
-  <div class="bottle-result" id="bresult${i}" style="padding:0 18px 14px"></div>`;
-  setTimeout(()=>{let el=document.getElementById('b'+i);if(el)el.scrollIntoView({behavior:'smooth',block:'center'})},100);
-}
-
-function bottleSetType(btn){
-  btn.parentNode.querySelectorAll('.bottle-type').forEach(x=>x.classList.remove('on'));
-  btn.classList.add('on');
-  let t=btn.dataset.type,i=btn.closest('.card').id.replace('c','');
-  let extra=document.getElementById('bextra'+i);
-  if(t==='2')extra.innerHTML='<input class="zodiac-inp" id="bmsg'+i+'" placeholder="瓶子内容（可选）" style="width:100%;box-sizing:border-box">';
-  else if(t==='3')extra.innerHTML='<input class="zodiac-inp" id="bid'+i+'" placeholder="瓶子 ID" style="width:120px;margin-right:6px"><input class="zodiac-inp" id="breply'+i+'" placeholder="回复内容" style="width:calc(100% - 132px);box-sizing:border-box">';
-  else extra.innerHTML='';
-}
-
-async function bottleDo(i){
-  let card=document.getElementById('c'+i),info=card.querySelector('.bottle-info');
-  let typeBtn=card.querySelector('.bottle-type.on');
-  if(!typeBtn)return;
-  let type=typeBtn.dataset.type;
-  let uin=document.getElementById('uin'+i),grp=document.getElementById('grp'+i);
-  let u=uin?uin.value.trim():'',g=grp?grp.value.trim():'';
-  if(!u||!g){alert('请先填写 QQ 号和群号');return}
-  let params=`type=${type}&uin=${encodeURIComponent(u)}&group=${encodeURIComponent(g)}`;
-  if(type==='2'){let m=document.getElementById('bmsg'+i);if(m&&m.value.trim())params+='&msg='+encodeURIComponent(m.value.trim())}
-  if(type==='3'){let id=document.getElementById('bid'+i),rp=document.getElementById('breply'+i);if(id&&id.value.trim())params+='&bottle_id='+encodeURIComponent(id.value.trim());if(rp&&rp.value.trim())params+='&reply_msg='+encodeURIComponent(rp.value.trim())}
-  let result=document.getElementById('bresult'+i);
-  result.innerHTML='<div class="load">加载中……</div>';
-  try{
-    let text=await (await get(apis[active][i].url+'?'+params,apis[active][i].proxy)).text();
-    result.innerHTML=`<div class="bubble" style="max-width:calc(100% - 24px)">${esc(text.trim())}</div><div class="actions"><button class="btn" onclick="event.stopPropagation();var t=this.closest('.bottle-result').querySelector('.bubble').innerText;navigator.clipboard.writeText(t).then(()=>{var b=this;b.textContent='已复制 ✓';b.classList.add('ok');setTimeout(()=>{b.textContent='复制';b.classList.remove('ok')},1400)})">复制</button></div>`;
-  }catch(e){result.innerHTML='<div class="err">漂流瓶接口请求失败</div>'}
 }
 
 // Music card (网易云热歌)
