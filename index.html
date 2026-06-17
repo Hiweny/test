@@ -133,6 +133,48 @@ body{overflow-x:hidden}
 .cloud .head{background:linear-gradient(135deg,rgba(40,53,91,.98),rgba(124,83,108,.84));color:#EEE6DD}
 .star .head{background:linear-gradient(135deg,rgba(0,11,81,.98),rgba(67,135,226,.76));color:#F4D49A}
 .night .head{background:linear-gradient(135deg,rgba(4,23,36,.98),rgba(120,93,114,.84));color:#F2DAD1}
+
+/* ===== Collection / Fav Styles ===== */
+.fav-toolbar{display:flex;gap:8px;flex-wrap:wrap;padding:0 0 8px}
+.fav-toolbar .btn{padding:6px 14px;font-size:13px}
+.fav-search{width:100%;padding:8px 14px;border-radius:12px;border:1px solid rgba(255,255,255,.18);background:rgba(0,0,0,.35);color:#fff;font-size:14px;outline:0;margin-bottom:10px}
+.fav-search::placeholder{color:rgba(255,255,255,.35)}
+.fav-filter{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+.fav-filter .btn{padding:5px 12px;font-size:12px}
+.fav-filter .btn.on{background:rgba(255,214,158,.25);border:1px solid rgba(255,214,158,.45)}
+
+/* Daily cover card */
+.daily-card{border-radius:22px;overflow:hidden;background:rgba(10,22,38,.42);border:1px solid rgba(255,255,255,.1);box-shadow:0 18px 60px rgba(0,0,0,.34);backdrop-filter:blur(10px) saturate(130%);-webkit-backdrop-filter:blur(10px) saturate(130%)}
+.daily-cover{position:relative;width:100%;aspect-ratio:16/9;overflow:hidden}
+.daily-cover img{width:100%;height:100%;object-fit:cover;display:block}
+.daily-quote{padding:16px 18px;font-size:15px;line-height:1.75;color:rgba(255,250,235,.9);background:linear-gradient(135deg,rgba(255,255,255,.08),rgba(255,255,255,.03));border-top:1px solid rgba(255,255,255,.08)}
+.daily-quote small{display:block;margin-top:6px;color:rgba(255,250,235,.55);font-size:13px}
+
+/* Add collection card */
+.add-card{border-radius:22px;overflow:hidden;background:rgba(10,22,38,.42);border:1px solid rgba(255,255,255,.1);box-shadow:0 18px 60px rgba(0,0,0,.34);backdrop-filter:blur(10px) saturate(130%);-webkit-backdrop-filter:blur(10px) saturate(130%)}
+.add-card .head{background:linear-gradient(135deg,rgba(30,60,50,.98),rgba(80,140,120,.78));color:#E2F0E9}
+.add-body{padding:14px;display:flex;flex-direction:column;gap:10px}
+.add-body textarea{width:100%;min-height:80px;padding:10px 12px;border-radius:12px;border:1px solid rgba(255,255,255,.18);background:rgba(0,0,0,.35);color:#fff;font-size:14px;outline:0;resize:vertical;font-family:inherit}
+.add-body textarea::placeholder{color:rgba(255,255,255,.35)}
+.add-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.add-row select{padding:6px 10px;border-radius:10px;border:1px solid rgba(255,255,255,.2);background:rgba(0,0,0,.4);color:#fff;font-size:13px;outline:0}
+.add-row .btn{padding:6px 14px;font-size:13px}
+
+/* Collection item card */
+.fav-card .head{background:linear-gradient(135deg,rgba(40,40,60,.98),rgba(100,80,120,.78));color:#F0E6FF}
+.fav-card .head .fav-meta{font-size:12px;font-weight:400;opacity:.75;margin-left:auto;padding-left:10px;white-space:nowrap}
+.fav-body{padding:12px}
+.fav-body img,.fav-body video{display:block;width:100%;max-height:70vh;object-fit:contain;border-radius:18px;box-shadow:0 16px 50px rgba(0,0,0,.38);background:rgba(0,0,0,.32)}
+.fav-note{padding:10px 14px 14px;font-size:14px;line-height:1.7;color:rgba(255,250,235,.82);white-space:pre-wrap;word-break:break-word}
+.fav-tags{display:flex;gap:6px;flex-wrap:wrap;padding:0 14px 10px}
+.fav-tag{font-size:12px;padding:3px 10px;border-radius:999px;background:rgba(255,255,255,.1);color:rgba(255,250,235,.7);border:1px solid rgba(255,255,255,.08)}
+.fav-actions{display:flex;justify-content:flex-end;gap:8px;padding:0 12px 12px}
+
+/* Back to top */
+#backtop{position:fixed;right:18px;bottom:18px;width:40px;height:40px;border-radius:50%;background:rgba(0,0,0,.55);border:1px solid rgba(255,255,255,.2);color:#fff;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:99;opacity:0;transform:translateY(10px);transition:opacity .3s ease,transform .3s ease,background .25s ease;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);pointer-events:none}
+#backtop.show{opacity:1;transform:translateY(0);pointer-events:auto}
+#backtop:hover{background:rgba(0,0,0,.75);border-color:rgba(255,255,255,.4)}
+
 @media(max-width:520px){.wrap{padding:34px 18px 72px}.wrap.top{padding-top:30px}.brand{font-size:clamp(38px,15vw,58px);margin-bottom:8px}.line{font-size:14px;margin-bottom:26px}.head{padding:14px 15px}.picwrap{padding:9px}.picwrap img,.picwrap video{border-radius:16px}.bubble{margin:15px 14px 17px 22px;max-width:calc(100% - 38px);font-size:14.5px}.zodiac-inp,.hero-inp{width:80px}.carousel-arrow{width:30px;height:30px;font-size:15px}.carousel-arrow.left{left:16px}.carousel-arrow.right{right:16px}}
 </style>
 </head>
@@ -141,9 +183,10 @@ body{overflow-x:hidden}
 <main class="wrap" id="wrap">
 <h1 class="brand">Randomness</h1>
 <div class="line" id="line">正在捞一句夜里的话……</div>
-<div class="tabs"><button class="tab" data-type="txt">文案</button><button class="tab" data-type="img">图片</button><button class="tab" data-type="video">视频</button><button class="tab" data-type="audio">音频</button></div>
+<div class="tabs"><button class="tab" data-type="txt">文案</button><button class="tab" data-type="img">图片</button><button class="tab" data-type="video">视频</button><button class="tab" data-type="audio">音频</button><button class="tab" data-type="fav">收藏</button></div>
 <section class="list" id="list"></section>
 </main>
+<button id="backtop" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
 <script>
 const C='https://api.cors.syrins.tech/?url=';
 
@@ -194,7 +237,7 @@ audio:[
   {name:'王者荣耀语音',theme:'lightslit',kind:'voice',url:'https://api.yujn.cn/api/wzyyb.php',proxy:1}
 ]};
 const wrap=document.getElementById('wrap'),list=document.getElementById('list'),line=document.getElementById('line');
-let active='',currentAudio=null,videos={};
+let active='',currentAudio=null,videos={},_collectData={};
 
 async function get(u,p){return fetch((p?C:'')+u+(u.includes('?')?'&':'?')+'_='+Date.now())}
 function val(o,path){return path.split('.').reduce((obj,k)=>obj?.[k],o)}
@@ -203,10 +246,8 @@ async function timeLine(){try{let j=await (await get('https://shanhe.kim/api/za/
 function stopCardMedia(i){
   let b=document.getElementById('b'+i);
   if(!b)return;
-  // Stop any video in this card
   let vid=b.querySelector('video');
   if(vid){vid.pause();vid.removeAttribute('src');vid.load()}
-  // Stop any audio in this card (except music cards that keep playing)
   let aud=b.querySelector('audio');
   if(aud){aud.pause();aud.removeAttribute('src')}
 }
@@ -217,7 +258,7 @@ document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{
   active=t;
   document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('on',x===b));
   wrap.classList.add('top');
-  render(t);
+  if(t==='fav') renderFav(); else render(t);
 });
 
 function render(t){
@@ -306,9 +347,9 @@ async function openCard(i){
         let j=await (await get(a.url,a.proxy)).json();
         let imgs=j.data?.images||j.images||[];
         let cid='cs_'+Date.now()+'_'+i;
+        _collectData[i]={type:'image',urls:imgs,title:a.name};
         carouselState[cid]=0;
-        inner.innerHTML=`<div class="carousel" id="${cid}"><div class="carousel-track" style="transform:translateX(0%)">${imgs.map((src,k)=>`<img id="${cid}_img${k}" src="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 300'><rect fill='%23111' width='400' height='300'/><text fill='%23555' x='200' y='150' text-anchor='middle' dominant-baseline='middle' font-size='14'>加载中...</text></svg>" onerror="this.style.display='none'">`).join('')}</div><div class="carousel-arrow left" onclick="carouselShift('${cid}',-1)">‹</div><div class="carousel-arrow right" onclick="carouselShift('${cid}',1)">›</div><div class="carousel-nav">${imgs.map((_,k)=>`<div class="carousel-dot${k===0?' active':''}" onclick="carouselGo('${cid}',${k})"></div>`).join('')}</div></div><div class="actions"><span style="color:rgba(255,255,255,.5);font-size:13px;padding:4px 0">${esc(j.data?.title||'')} · ${imgs.length} 张</span></div>`;
-        // Load cosplay images via proxy as blob URLs to bypass CORP
+        inner.innerHTML=`<div class="carousel" id="${cid}"><div class="carousel-track" style="transform:translateX(0%)">${imgs.map((src,k)=>`<img id="${cid}_img${k}" src="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 300'><rect fill='%23111' width='400' height='300'/><text fill='%23555' x='200' y='150' text-anchor='middle' dominant-baseline='middle' font-size='14'>加载中...</text></svg>" onerror="this.style.display='none'">`).join('')}</div><div class="carousel-arrow left" onclick="carouselShift('${cid}',-1)">‹</div><div class="carousel-arrow right" onclick="carouselShift('${cid}',1)">›</div><div class="carousel-nav">${imgs.map((_,k)=>`<div class="carousel-dot${k===0?' active':''}" onclick="carouselGo('${cid}',${k})"></div>`).join('')}</div></div><div class="actions"><span style="color:rgba(255,255,255,.5);font-size:13px;padding:4px 0">${esc(j.data?.title||'')} · ${imgs.length} 张</span><button class="btn ok" onclick="event.stopPropagation();collectMedia(${i})" style="margin-left:auto">收藏</button></div>`;
         imgs.forEach((src,k)=>{
           let imgEl=document.getElementById(cid+'_img'+k);
           if(!imgEl)return;
@@ -316,16 +357,15 @@ async function openCard(i){
             imgEl.src=URL.createObjectURL(blob);
           }).catch(()=>{imgEl.style.display='none'});
         });
-        // Touch swipe
         (function(id,total){let el=document.getElementById(id),sx=0;el.addEventListener('touchstart',e=>{sx=e.touches[0].clientX});el.addEventListener('touchend',e=>{let dx=e.changedTouches[0].clientX-sx;if(Math.abs(dx)>50)carouselShift(id,dx<0?1:-1)})})(cid,imgs.length);
         setTimeout(()=>{let el=document.getElementById(cid);if(el)el.scrollIntoView({behavior:'smooth',block:'center'})},100);
       }else{
         let src=a.url;
         if(a.kind==='direct'){
           if(a.proxy){
-            // Proxy images via blob URL to bypass CORP
             let imgId='img_'+Date.now()+'_'+i;
-            inner.innerHTML=`<div class="picwrap"><img id="${imgId}" src="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 300'><rect fill='%23111' width='400' height='300'/><text fill='%23555' x='200' y='150' text-anchor='middle' dominant-baseline='middle' font-size='14'>加载中...</text></svg>" onload="setTimeout(()=>this.scrollIntoView({behavior:'smooth',block:'center'}),80)" onerror="this.parentNode.innerHTML='<div class=err>图片加载失败</div>'"></div><div class="actions"><button class="btn" onclick="event.stopPropagation();downloadShown('${imgId}',this)">下载</button></div>`;
+            _collectData[i]={type:'image',urls:[a.url],title:a.name};
+            inner.innerHTML=`<div class="picwrap"><img id="${imgId}" src="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 300'><rect fill='%23111' width='400' height='300'/><text fill='%23555' x='200' y='150' text-anchor='middle' dominant-baseline='middle' font-size='14'>加载中...</text></svg>" onload="setTimeout(()=>this.scrollIntoView({behavior:'smooth',block:'center'}),80)" onerror="this.parentNode.innerHTML='<div class=err>图片加载失败</div>'"></div><div class="actions"><button class="btn ok" onclick="event.stopPropagation();collectMedia(${i})">收藏</button></div>`;
             fetch(C+a.url).then(r=>r.blob()).then(blob=>{
               let el=document.getElementById(imgId);
               if(el)el.src=URL.createObjectURL(blob);
@@ -340,18 +380,18 @@ async function openCard(i){
         else if(a.kind==='jsonimg'){let j=await (await get(a.url)).json();src=j.data||j.imgurl||j.url}
         src+=(src.includes('?')?'&':'?')+'t='+Date.now();
         let imgId='img_'+Date.now()+'_'+i;
-        inner.innerHTML=`<div class="picwrap"><img id="${imgId}" src="${src}" onload="setTimeout(()=>this.scrollIntoView({behavior:'smooth',block:'center'}),80)" onerror="this.parentNode.innerHTML='<div class=err>图片加载失败</div>'"></div><div class="actions"><button class="btn" onclick="event.stopPropagation();downloadShown('${imgId}',this)">下载</button></div>`;
+        _collectData[i]={type:'image',urls:[src],title:a.name};
+        inner.innerHTML=`<div class="picwrap"><img id="${imgId}" src="${src}" onload="setTimeout(()=>this.scrollIntoView({behavior:'smooth',block:'center'}),80)" onerror="this.parentNode.innerHTML='<div class=err>图片加载失败</div>'"></div><div class="actions"><button class="btn ok" onclick="event.stopPropagation();collectMedia(${i})">收藏</button></div>`;
       }
     }else if(active==='video'){
       b.classList.add('open');card.classList.add('open');
       let src=a.url;
       if(a.kind==='video'){
-        // Resolve redirect to get direct mp4 URL (fixes Edge stalling)
         try{let r=await fetch(src+(src.includes('?')?'&':'?')+'_='+Date.now());src=r.url}catch(e){}
       }
       let vidId='vid_'+Date.now()+'_'+i;
-      inner.innerHTML=`<div class="picwrap"><video id="${vidId}" src="${src}" controls playsinline preload="metadata" onloadedmetadata="setTimeout(()=>this.scrollIntoView({behavior:'smooth',block:'center'}),200)" onstalled="this.play()" onerror="this.parentNode.innerHTML='<div class=err>视频加载失败</div>'"></video></div>`;
-      // Track video for cleanup
+      _collectData[i]={type:'video',videoUrl:src,urls:[],title:a.name};
+      inner.innerHTML=`<div class="picwrap"><video id="${vidId}" src="${src}" controls playsinline preload="metadata" onloadedmetadata="setTimeout(()=>this.scrollIntoView({behavior:'smooth',block:'center'}),200)" onstalled="this.play()" onerror="this.parentNode.innerHTML='<div class=err>视频加载失败</div>'"></video></div><div class="actions"><button class="btn ok" onclick="event.stopPropagation();collectMedia(${i})">收藏</button></div>`;
       let v=document.getElementById(vidId);
       if(!videos)videos={};
       videos[vidId]=v;
@@ -417,15 +457,12 @@ async function openMusicCard(i){
 }
 
 function playMusicUrl(url,btn){
-  // Toggle: if same music is playing, pause it
   if(currentAudio&&currentAudio.el&&currentAudio.url===url&&!currentAudio.el.paused){
     currentAudio.el.pause();btn.textContent='▶ 播放';btn.classList.remove('ok');return;
   }
-  // Same music paused: resume
   if(currentAudio&&currentAudio.el&&currentAudio.url===url&&currentAudio.el.paused){
     currentAudio.el.play();btn.textContent='⏸ 暂停';btn.classList.add('ok');return;
   }
-  // Stop any previous audio
   if(currentAudio){currentAudio.el.pause();document.querySelectorAll('.music-ctrl .btn.ok').forEach(x=>{x.textContent='▶ 播放';x.classList.remove('ok')})}
   btn.textContent='⏸ 暂停';btn.classList.add('ok');
   let audio=new Audio(url);
@@ -470,6 +507,324 @@ function spark(x,y,s,c,a,r){ctx.save();ctx.translate(x,y);ctx.rotate(r);ctx.stro
 function animate(){time+=.016;ctx.fillStyle='#000';ctx.fillRect(0,0,W,H);let cx=W/2,cy=H/2,fl=400;particles.sort((a,b)=>b.z-a.z);for(const p of particles){p.z-=SPEED*(1+(2500-p.z)/2500);p.rotation+=p.rotSpeed;if(p.z<=10){Object.assign(p,make());p.z=2500;continue}let sc=fl/p.z,x=cx+p.x*sc,y=cy+p.y*sc,s=p.size*sc;if(x<-50||x>W+50||y<-50||y>H+50)continue;let a=1;if(p.z>2000)a=(2500-p.z)/500;if(p.z<200)a=p.z/200;a=Math.max(0,Math.min(1,a))*(.7+.3*Math.sin(time*p.twinkleSpeed+p.phase));if(s<.3){dot(x,y,s,p.color,a*.6);continue}if(p.shape==='filled-star')star(x,y,s,p.color,a,p.rotation,1);else if(p.shape==='outline-star')star(x,y,s,p.color,a,p.rotation,0);else if(p.shape==='cross')cross(x,y,s,p.color,a);else if(p.shape==='glow')glow(x,y,s,p.color,a);else if(p.shape==='sparkle')spark(x,y,s,p.color,a,p.rotation);else dot(x,y,s,p.color,a)}requestAnimationFrame(animate)}
 addEventListener('resize',resize);resize();init();animate();
 })();
+
+// ═══════════════════════════════════════════════════════════════
+//  COLLECTION / 收藏 功能
+// ═══════════════════════════════════════════════════════════════
+function collectMedia(i){
+  const d=_collectData[i];
+  if(!d) return;
+  loadFav();
+  const item={
+    id:genId(),platform:'direct',type:d.type,title:d.title||'未命名收藏',author:'',
+    sourceUrl:d.urls?.[0]||d.videoUrl||'',coverUrl:d.urls?.[0]||'',
+    mediaUrls:d.urls||[],videoUrl:d.videoUrl||'',tags:[],createdAt:Date.now(),note:'',color:randHex()
+  };
+  const exists=favState.items.some(x=>x.sourceUrl&&x.sourceUrl===item.sourceUrl);
+  if(exists){alert('已收藏过此内容');return;}
+  favState.items.unshift(item);
+  saveFav();
+  alert('已收藏 ✓');
+}
+const COL_KEY = 'snowline_media_collection_v1';
+let favState = { items: [], filter: 'all', search: '', sort: 'newest' };
+let favCarouselState = {};
+
+function loadFav(){
+  try{
+    const raw = localStorage.getItem(COL_KEY);
+    if(raw) favState.items = JSON.parse(raw);
+  }catch(e){ favState.items = []; }
+}
+function saveFav(){
+  try{ localStorage.setItem(COL_KEY, JSON.stringify(favState.items)); }catch(e){}
+}
+function genId(){ return 'fav_'+Date.now()+'_'+Math.random().toString(36).slice(2,7); }
+function randHex(){ return '#' + Math.floor(Math.random()*16777215).toString(16).padStart(6,'0'); }
+async function fetchColor(){
+  try{ let r = await fetch(C+'https://shanhe.kim/api/wz/color.php?_='+Date.now()); let t = await r.text(); let c = t.replace(/[^#a-fA-F0-9]/g,'').slice(0,7); if(c.length===7) return c; }catch(e){} return randHex(); }
+function parseUrl(url){
+  url = url.trim();
+  if(!url) return null;
+  // 抖音
+  let dy = url.match(/douyin\.com\/(?:video|note)\/(\w+)/) || url.match(/v\.douyin\.com\/(\w+)/);
+  if(dy) return { platform:'douyin', type:'video', id:dy[1] };
+  // 小红书
+  let xhs = url.match(/xhslink\.com\/(\w+)/) || url.match(/xiaohongshu\.com\/discovery\/item\/(\w+)/);
+  if(xhs) return { platform:'xhs', type:'image', id:xhs[1] };
+  // 直接图片 (including API endpoints that return images)
+  if(/\.(jpg|jpeg|png|gif|webp|bmp)(\?.*)?$/i.test(url)) return { platform:'direct', type:'image', id:null };
+  // 图片API (no extension but known image APIs)
+  if(/\/(tu|bing|image|img|pic)\//i.test(url) || /api.*\.(php|jpg|png)/i.test(url)) return { platform:'direct', type:'image', id:null };
+  // 直接视频
+  if(/\.(mp4|webm|mov)(\?.*)?$/i.test(url)) return { platform:'direct', type:'video', id:null };
+  return { platform:'unknown', type:'unknown', id:null };
+}
+
+async function addFavFromUrl(url, apiType){
+  const parsed = parseUrl(url);
+  let item = { id: genId(), platform: parsed.platform, type: parsed.type, title: '', author: '', sourceUrl: url, coverUrl: '', mediaUrls: [], videoUrl: '', tags: [], createdAt: Date.now(), note: '', color: await fetchColor() };
+
+  if(apiType==='douyin' || parsed.platform==='douyin'){
+    try{
+      let r = await fetch(C+'https://api.bugpk.com/api/douyin?url='+encodeURIComponent(url));
+      let j = await r.json();
+      if(j.data){
+        item.title = j.data.title||j.data.desc||'';
+        item.author = j.data.author?.name||j.data.author||'';
+        item.coverUrl = j.data.cover||j.data.coverUrl||'';
+        item.videoUrl = j.data.videoUrl||j.data.video||'';
+        item.mediaUrls = j.data.images||[];
+        if(item.videoUrl) item.type = 'video';
+        else if(item.mediaUrls.length) item.type = 'image';
+      }
+    }catch(e){}
+  }else if(apiType==='xhs' || parsed.platform==='xhs'){
+    try{
+      let r = await fetch(C+'https://api.bugpk.com/api/xhsjx?url='+encodeURIComponent(url));
+      let j = await r.json();
+      if(j.data){
+        item.title = j.data.title||j.data.desc||'';
+        item.author = j.data.author?.name||j.data.author||'';
+        item.coverUrl = j.data.cover||j.data.coverUrl||'';
+        item.mediaUrls = j.data.images||[];
+        item.type = item.mediaUrls.length ? 'image' : 'unknown';
+      }
+    }catch(e){}
+  }else if(apiType==='short'){
+    try{
+      let r = await fetch(C+'https://api.bugpk.com/api/short_videos');
+      let j = await r.json();
+      if(j.data){
+        item.title = j.data.title||'';
+        item.author = j.data.author||'';
+        item.coverUrl = j.data.cover||'';
+        item.videoUrl = j.data.videoUrl||j.data.video||'';
+        item.type = 'video';
+      }
+    }catch(e){}
+  }else{
+    // manual / direct
+    if(parsed.type==='image'){ item.mediaUrls=[url]; item.type='image'; }
+    else if(parsed.type==='video'){ item.videoUrl=url; item.type='video'; }
+    else { item.type='unknown'; }
+  }
+  if(!item.title) item.title = '未命名收藏';
+  favState.items.unshift(item);
+  saveFav();
+  renderFavList();
+}
+
+function deleteFav(id){
+  if(!confirm('确定要删除这条收藏吗？')) return;
+  favState.items = favState.items.filter(x=>x.id!==id);
+  saveFav();
+  renderFavList();
+}
+
+function exportFav(){
+  const blob = new Blob([JSON.stringify(favState.items,null,2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'snowline_media_collection_v1_'+new Date().toISOString().slice(0,10)+'.json';
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url), 1000);
+}
+function importFav(file){
+  const reader = new FileReader();
+  reader.onload = e => {
+    try{
+      let data = JSON.parse(e.target.result);
+      if(!Array.isArray(data)) throw new Error('格式错误');
+      // Merge: skip duplicates by sourceUrl
+      const existing = new Set(favState.items.map(x=>x.sourceUrl));
+      let added = 0;
+      data.forEach(it=>{
+        if(it && it.sourceUrl && !existing.has(it.sourceUrl)){
+          if(!it.id) it.id = genId();
+          if(!it.color) it.color = randHex();
+          favState.items.push(it);
+          existing.add(it.sourceUrl);
+          added++;
+        }
+      });
+      saveFav();
+      renderFavList();
+      alert('导入完成，新增 '+added+' 条收藏');
+    }catch(err){ alert('导入失败：'+err.message); }
+  };
+  reader.readAsText(file);
+}
+
+// Render full fav tab
+function renderFav(){
+  loadFav();
+  list.className='list open';
+  list.innerHTML = `
+    <div class="list-inner" id="favWrap">
+      <div class="fav-toolbar">
+        <button class="btn" onclick="exportFav()">导出 JSON</button>
+        <button class="btn" onclick="document.getElementById('favImport').click()">导入 JSON</button>
+        <input type="file" id="favImport" accept="application/json" style="display:none" onchange="importFav(this.files[0])">
+      </div>
+      <div id="favDaily"></div>
+      <div class="add-card">
+        <div class="head" onclick="toggleAddCard()"><span class="hd-left"><span>添加收藏</span></span><span class="chev" id="addChev">⌄</span></div>
+        <div class="body" id="addBody"><div class="inner">
+          <div class="add-body">
+            <textarea id="favUrl" placeholder="粘贴链接：抖音、小红书、图片或视频直链……"></textarea>
+            <div class="add-row">
+              <select id="favApi">
+                <option value="auto">自动识别</option>
+                <option value="douyin">抖音解析</option>
+                <option value="xhs">小红书解析</option>
+                <option value="short">短视频随机</option>
+                <option value="manual">手动/直链</option>
+              </select>
+              <button class="btn ok" onclick="doAddFav()">添加</button>
+            </div>
+          </div>
+        </div></div>
+      </div>
+      <input class="fav-search" id="favSearch" placeholder="搜索标题、平台、链接……" oninput="favState.search=this.value.trim();renderFavList()">
+      <div class="fav-filter">
+        <button class="btn ${favState.filter==='all'?'on':''}" onclick="favState.filter='all';renderFavList()">全部</button>
+        <button class="btn ${favState.filter==='image'?'on':''}" onclick="favState.filter='image';renderFavList()">图片</button>
+        <button class="btn ${favState.filter==='video'?'on':''}" onclick="favState.filter='video';renderFavList()">视频</button>
+      </div>
+      <div id="favStats" style="color:rgba(255,255,255,.5);font-size:13px;padding:0 4px 6px"></div>
+      <div id="favList"></div>
+    </div>`;
+  renderDailyCard();
+  renderFavList();
+  // open add card by default
+  setTimeout(()=>{ const b=document.getElementById('addBody'); if(b){ b.classList.add('open'); b.closest('.add-card').classList.add('open'); } }, 50);
+}
+function toggleAddCard(){
+  const card = document.querySelector('.add-card');
+  const body = document.getElementById('addBody');
+  const chev = document.getElementById('addChev');
+  if(body.classList.contains('open')){ body.classList.remove('open'); card.classList.remove('open'); }
+  else { body.classList.add('open'); card.classList.add('open'); }
+}
+async function doAddFav(){
+  const url = document.getElementById('favUrl').value.trim();
+  if(!url){ alert('请输入链接'); return; }
+  const api = document.getElementById('favApi').value;
+  const btn = document.querySelector('.add-card .btn.ok');
+  const old = btn.textContent; btn.textContent='解析中…'; btn.disabled=true;
+  try{ await addFavFromUrl(url, api==='auto'?'manual':api); document.getElementById('favUrl').value=''; }
+  catch(e){ alert('添加失败，请检查链接'); }
+  finally{ btn.textContent=old; btn.disabled=false; }
+}
+
+// Daily cover + yiyan
+async function renderDailyCard(){
+  const wrap = document.getElementById('favDaily');
+  if(!wrap) return;
+  const imgs = favState.items.filter(x=>x.type==='image' && (x.coverUrl||x.mediaUrls?.length));
+  let quote = '收藏是时间的琥珀。';
+  try{ let r = await fetch(C+'https://api.bugpk.com/api/yiyan?_='+Date.now()); quote = await r.text(); }catch(e){}
+  if(!imgs.length){ wrap.innerHTML=''; return; }
+  const it = imgs[Math.floor(Math.random()*imgs.length)];
+  const src = it.coverUrl || it.mediaUrls[0];
+  wrap.innerHTML = `<div class="daily-card">
+    <div class="daily-cover"><img src="${esc(src)}" onerror="this.style.display='none'" alt=""></div>
+    <div class="daily-quote">${esc(quote)}<small>—— 来自收藏「${esc(it.title||'未命名')}」</small></div>
+  </div>`;
+}
+
+function renderFavList(){
+  const container = document.getElementById('favList');
+  const statsEl = document.getElementById('favStats');
+  if(!container) return;
+  let items = favState.items.slice();
+  if(favState.filter!=='all') items = items.filter(x=>x.type===favState.filter);
+  if(favState.search){
+    const s = favState.search.toLowerCase();
+    items = items.filter(x=>(x.title||'').toLowerCase().includes(s)||(x.platform||'').toLowerCase().includes(s)||(x.sourceUrl||'').toLowerCase().includes(s));
+  }
+  const total = favState.items.length;
+  const imgCount = favState.items.filter(x=>x.type==='image').length;
+  const vidCount = favState.items.filter(x=>x.type==='video').length;
+  if(statsEl) statsEl.textContent = `共 ${total} 条 · 图片 ${imgCount} · 视频 ${vidCount}`;
+  if(!items.length){ container.innerHTML='<div class="err">暂无收藏</div>'; return; }
+
+  container.innerHTML = items.map((it, idx)=>{
+    const color = it.color || '#444';
+    const headStyle = `background:linear-gradient(135deg,${color}ee,${color}88);color:#fff`;
+    const title = esc(it.title||'未命名');
+    const author = it.author ? esc(it.author) : '';
+    const platformLabel = {douyin:'抖音',xhs:'小红书',direct:'直链',unknown:'未知'}[it.platform] || it.platform;
+    let body = '';
+    if(it.type==='image'){
+      const imgs = it.mediaUrls?.length ? it.mediaUrls : (it.coverUrl ? [it.coverUrl] : []);
+      if(imgs.length>1){
+        const cid = 'favcs_'+it.id;
+        favCarouselState[cid]=0;
+        body = `<div class="carousel" id="${cid}"><div class="carousel-track">${imgs.map((src,k)=>`<img data-src="${esc(src)}" onerror="this.style.display='none'" alt="">`).join('')}</div><div class="carousel-arrow left" onclick="favCarouselShift('${cid}',-1)">‹</div><div class="carousel-arrow right" onclick="favCarouselShift('${cid}',1)">›</div><div class="carousel-nav">${imgs.map((_,k)=>`<div class="carousel-dot${k===0?' active':''}" onclick="favCarouselGo('${cid}',${k})"></div>`).join('')}</div></div>`;
+        setTimeout(()=>loadFavCarouselImages(cid),50);
+      }else if(imgs.length===1){
+        const imgId='favimg_'+it.id;
+        body = `<div class="fav-body"><img id="${imgId}" src="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 300'><rect fill='%23111' width='400' height='300'/><text fill='%23555' x='200' y='150' text-anchor='middle' dominant-baseline='middle' font-size='14'>加载中...</text></svg>" onerror="this.style.display='none'" alt=""></div>`;
+        setTimeout(()=>loadFavImage(imgId,imgs[0]),50);
+      }else{
+        body = '<div class="err">暂无图片</div>';
+      }
+    }else if(it.type==='video'){
+      const src = it.videoUrl || it.sourceUrl;
+      body = `<div class="fav-body"><video src="${esc(C+src)}" controls playsinline preload="metadata" onstalled="this.play()"></video></div>`;
+    }else{
+      body = `<div class="fav-body" style="padding:18px;color:rgba(255,255,255,.6)">无法预览此类型收藏</div>`;
+    }
+    const tags = (it.tags||[]).map(t=>`<span class="fav-tag">${esc(t)}</span>`).join('');
+    const note = it.note ? `<div class="fav-note">${esc(it.note)}</div>` : '';
+    return `<article class="card fav-card" id="fav_${it.id}">
+      <div class="head" style="${headStyle}"><span class="hd-left"><span>${title}</span>${author?`<span style="opacity:.75;font-size:12px;font-weight:400">@${author}</span>`:''}</span><span class="fav-meta">${platformLabel}</span></div>
+      ${body}
+      ${tags?`<div class="fav-tags">${tags}</div>`:''}
+      ${note}
+      <div class="fav-actions"><button class="btn" onclick="deleteFav('${it.id}')">删除</button></div>
+    </article>`;
+  }).join('');
+}
+
+function favCarouselShift(cid,dir){
+  const el=document.getElementById(cid),track=el.querySelector('.carousel-track'),dots=el.querySelectorAll('.carousel-dot');
+  const total=dots.length,idx=( (favCarouselState[cid]||0) + dir + total ) % total;
+  favCarouselState[cid]=idx;
+  track.style.transform=`translateX(-${idx*100}%)`;
+  dots.forEach((d,k)=>d.classList.toggle('active',k===idx));
+}
+function favCarouselGo(cid,idx){
+  const el=document.getElementById(cid),track=el.querySelector('.carousel-track'),dots=el.querySelectorAll('.carousel-dot');
+  favCarouselState[cid]=idx; track.style.transform=`translateX(-${idx*100}%)`;
+  dots.forEach((d,k)=>d.classList.toggle('active',k===idx));
+}
+async function loadFavImage(imgId,url){
+  try{ let r=await fetch(C+url); let b=await r.blob(); let u=URL.createObjectURL(b); let img=document.getElementById(imgId); if(img)img.src=u; }
+  catch(e){ let img=document.getElementById(imgId); if(img)img.style.display='none'; }
+}
+async function loadFavCarouselImages(cid){
+  const el=document.getElementById(cid); if(!el)return;
+  const imgs=el.querySelectorAll('img[data-src]');
+  for(let img of imgs){
+    let src=img.dataset.src; if(!src)continue;
+    try{ let r=await fetch(C+src); let b=await r.blob(); img.src=URL.createObjectURL(b); }
+    catch(e){ img.style.display='none'; }
+  }
+}
+
+// Back to top: show only when scrolling UP
+let lastScrollY = window.scrollY;
+const backtopBtn = document.getElementById('backtop');
+window.addEventListener('scroll', ()=>{
+  const y = window.scrollY;
+  if(y < 200){ backtopBtn.classList.remove('show'); }
+  else if(y < lastScrollY){ backtopBtn.classList.add('show'); }
+  else { backtopBtn.classList.remove('show'); }
+  lastScrollY = y;
+}, {passive:true});
 </script>
 </body>
 </html>
