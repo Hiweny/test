@@ -164,7 +164,8 @@ body{overflow-x:hidden}
 .fav-card .head{background:linear-gradient(135deg,rgba(40,40,60,.98),rgba(100,80,120,.78));color:#F0E6FF}
 .fav-card .head .fav-meta{font-size:12px;font-weight:400;opacity:.75;margin-left:auto;padding-left:10px;white-space:nowrap}
 .fav-body{padding:12px}
-.fav-body img,.fav-body video{display:block;width:100%;max-height:70vh;object-fit:contain;border-radius:18px;box-shadow:0 16px 50px rgba(0,0,0,.38);background:rgba(0,0,0,.32)}
+.fav-body img{display:block;width:100%;height:auto;object-fit:contain;border-radius:18px;box-shadow:0 16px 50px rgba(0,0,0,.38);background:rgba(0,0,0,.32)}
+.fav-body video{display:block;width:100%;max-height:70vh;object-fit:contain;border-radius:18px;box-shadow:0 16px 50px rgba(0,0,0,.38);background:rgba(0,0,0,.32)}
 .fav-note{padding:10px 14px 14px;font-size:14px;line-height:1.7;color:rgba(255,250,235,.82);white-space:pre-wrap;word-break:break-word}
 .fav-tags{display:flex;gap:6px;flex-wrap:wrap;padding:0 14px 10px}
 .fav-tag{font-size:12px;padding:3px 10px;border-radius:999px;background:rgba(255,255,255,.1);color:rgba(255,250,235,.7);border:1px solid rgba(255,255,255,.08)}
@@ -511,21 +512,6 @@ addEventListener('resize',resize);resize();init();animate();
 // ═══════════════════════════════════════════════════════════════
 //  COLLECTION / 收藏 功能
 // ═══════════════════════════════════════════════════════════════
-function collectMedia(i){
-  const d=_collectData[i];
-  if(!d) return;
-  loadFav();
-  const item={
-    id:genId(),platform:'direct',type:d.type,title:d.title||'未命名收藏',author:'',
-    sourceUrl:d.urls?.[0]||d.videoUrl||'',coverUrl:d.urls?.[0]||'',
-    mediaUrls:d.urls||[],videoUrl:d.videoUrl||'',tags:[],createdAt:Date.now(),note:'',color:randHex()
-  };
-  const exists=favState.items.some(x=>x.sourceUrl&&x.sourceUrl===item.sourceUrl);
-  if(exists){alert('已收藏过此内容');return;}
-  favState.items.unshift(item);
-  saveFav();
-  alert('已收藏 ✓');
-}
 const COL_KEY = 'snowline_media_collection_v1';
 let favState = { items: [], filter: 'all', search: '', sort: 'newest' };
 let favCarouselState = {};
@@ -533,7 +519,14 @@ let favCarouselState = {};
 function loadFav(){
   try{
     const raw = localStorage.getItem(COL_KEY);
-    if(raw) favState.items = JSON.parse(raw);
+    if(raw){
+      let parsed = JSON.parse(raw);
+      // 兼容旧格式 {items:[...]} 和新格式 [...]
+      let data = Array.isArray(parsed) ? parsed : (parsed.items || []);
+      // 清理旧格式的 _idx 字段
+      data.forEach(it=>{ delete it._idx; delete it._albumIdx; });
+      favState.items = data;
+    }
   }catch(e){ favState.items = []; }
 }
 function saveFav(){
@@ -541,6 +534,23 @@ function saveFav(){
 }
 function genId(){ return 'fav_'+Date.now()+'_'+Math.random().toString(36).slice(2,7); }
 function randHex(){ return '#' + Math.floor(Math.random()*16777215).toString(16).padStart(6,'0'); }
+function collectMedia(i){
+  try{
+    const d=_collectData[i];
+    if(!d){ alert('收藏数据丢失，请重新展开卡片后再试'); return; }
+    loadFav();
+    const item={
+      id:genId(),platform:'direct',type:d.type,title:d.title||'未命名收藏',author:'',
+      sourceUrl:d.urls?.[0]||d.videoUrl||'',coverUrl:d.urls?.[0]||'',
+      mediaUrls:d.urls||[],videoUrl:d.videoUrl||'',tags:[],createdAt:Date.now(),note:'',color:randHex()
+    };
+    const exists=favState.items.some(x=>x.sourceUrl&&x.sourceUrl===item.sourceUrl);
+    if(exists){alert('已收藏过此内容');return;}
+    favState.items.unshift(item);
+    saveFav();
+    alert('已收藏 ✓');
+  }catch(e){ alert('收藏失败：'+e.message); }
+}
 async function fetchColor(){
   try{ let r = await fetch(C+'https://shanhe.kim/api/wz/color.php?_='+Date.now()); let t = await r.text(); let c = t.replace(/[^#a-fA-F0-9]/g,'').slice(0,7); if(c.length===7) return c; }catch(e){} return randHex(); }
 function parseUrl(url){
@@ -565,42 +575,45 @@ async function addFavFromUrl(url, apiType){
   const parsed = parseUrl(url);
   let item = { id: genId(), platform: parsed.platform, type: parsed.type, title: '', author: '', sourceUrl: url, coverUrl: '', mediaUrls: [], videoUrl: '', tags: [], createdAt: Date.now(), note: '', color: await fetchColor() };
 
-  if(apiType==='douyin' || parsed.platform==='douyin'){
+  if(apiType==='douyin' || (apiType==='auto' && parsed.platform==='douyin')){
     try{
-      let r = await fetch(C+'https://api.bugpk.com/api/douyin?url='+encodeURIComponent(url));
+      let r = await fetch('https://api.bugpk.com/api/douyin?url='+encodeURIComponent(url));
       let j = await r.json();
       if(j.data){
         item.title = j.data.title||j.data.desc||'';
         item.author = j.data.author?.name||j.data.author||'';
         item.coverUrl = j.data.cover||j.data.coverUrl||'';
-        item.videoUrl = j.data.videoUrl||j.data.video||'';
-        item.mediaUrls = j.data.images||[];
+        item.videoUrl = j.data.videoUrl||j.data.video||j.data.url||'';
+        item.mediaUrls = j.data.images||j.data.imgurl||j.data.pics||[];
         if(item.videoUrl) item.type = 'video';
         else if(item.mediaUrls.length) item.type = 'image';
+        item.platform = 'douyin';
       }
     }catch(e){}
-  }else if(apiType==='xhs' || parsed.platform==='xhs'){
+  }else if(apiType==='xhs' || (apiType==='auto' && parsed.platform==='xhs')){
     try{
-      let r = await fetch(C+'https://api.bugpk.com/api/xhsjx?url='+encodeURIComponent(url));
+      let r = await fetch('https://api.bugpk.com/api/xhsjx?url='+encodeURIComponent(url));
       let j = await r.json();
       if(j.data){
         item.title = j.data.title||j.data.desc||'';
         item.author = j.data.author?.name||j.data.author||'';
         item.coverUrl = j.data.cover||j.data.coverUrl||'';
-        item.mediaUrls = j.data.images||[];
+        item.mediaUrls = j.data.images||j.data.imgurl||j.data.pics||[];
         item.type = item.mediaUrls.length ? 'image' : 'unknown';
+        item.platform = 'xhs';
       }
     }catch(e){}
   }else if(apiType==='short'){
     try{
-      let r = await fetch(C+'https://api.bugpk.com/api/short_videos');
+      let r = await fetch('https://api.bugpk.com/api/short_videos');
       let j = await r.json();
       if(j.data){
         item.title = j.data.title||'';
         item.author = j.data.author||'';
         item.coverUrl = j.data.cover||'';
-        item.videoUrl = j.data.videoUrl||j.data.video||'';
+        item.videoUrl = j.data.videoUrl||j.data.video||j.data.url||'';
         item.type = 'video';
+        item.platform = 'short';
       }
     }catch(e){}
   }else{
@@ -634,19 +647,28 @@ function importFav(file){
   const reader = new FileReader();
   reader.onload = e => {
     try{
-      let data = JSON.parse(e.target.result);
-      if(!Array.isArray(data)) throw new Error('格式错误');
+      let raw = JSON.parse(e.target.result);
+      // 兼容旧格式 {items:[...]} 和新格式 [...]
+      let data = Array.isArray(raw) ? raw : (raw.items || []);
+      if(!Array.isArray(data)) throw new Error('无法识别的格式');
       // Merge: skip duplicates by sourceUrl
       const existing = new Set(favState.items.map(x=>x.sourceUrl));
       let added = 0;
       data.forEach(it=>{
-        if(it && it.sourceUrl && !existing.has(it.sourceUrl)){
-          if(!it.id) it.id = genId();
-          if(!it.color) it.color = randHex();
-          favState.items.push(it);
-          existing.add(it.sourceUrl);
-          added++;
-        }
+        if(!it) return;
+        // 兼容旧字段名
+        if(!it.sourceUrl && it.url) it.sourceUrl = it.url;
+        if(!it.mediaUrls && it.images) it.mediaUrls = it.images;
+        if(!it.videoUrl && it.video) it.videoUrl = it.video;
+        if(!it.sourceUrl) return;
+        if(existing.has(it.sourceUrl)) return;
+        if(!it.id) it.id = genId();
+        if(!it.color) it.color = randHex();
+        if(!it.createdAt) it.createdAt = Date.now();
+        delete it._idx; delete it._albumIdx;
+        favState.items.push(it);
+        existing.add(it.sourceUrl);
+        added++;
       });
       saveFav();
       renderFavList();
@@ -710,10 +732,18 @@ function toggleAddCard(){
 async function doAddFav(){
   const url = document.getElementById('favUrl').value.trim();
   if(!url){ alert('请输入链接'); return; }
-  const api = document.getElementById('favApi').value;
+  let api = document.getElementById('favApi').value;
+  if(api==='auto'){
+    const parsed = parseUrl(url);
+    if(parsed.platform==='douyin') api='douyin';
+    else if(parsed.platform==='xhs') api='xhs';
+    else if(parsed.type==='image') api='manual';
+    else if(parsed.type==='video') api='manual';
+    else api='manual';
+  }
   const btn = document.querySelector('.add-card .btn.ok');
   const old = btn.textContent; btn.textContent='解析中…'; btn.disabled=true;
-  try{ await addFavFromUrl(url, api==='auto'?'manual':api); document.getElementById('favUrl').value=''; }
+  try{ await addFavFromUrl(url, api); document.getElementById('favUrl').value=''; }
   catch(e){ alert('添加失败，请检查链接'); }
   finally{ btn.textContent=old; btn.disabled=false; }
 }
@@ -773,7 +803,7 @@ function renderFavList(){
       }
     }else if(it.type==='video'){
       const src = it.videoUrl || it.sourceUrl;
-      body = `<div class="fav-body"><video src="${esc(C+src)}" controls playsinline preload="metadata" onstalled="this.play()"></video></div>`;
+      body = `<div class="fav-body"><video src="${esc(src)}" controls playsinline preload="metadata" onstalled="this.play()" onerror="this.parentNode.innerHTML='<div class=err>视频加载失败</div>'"></video></div>`;
     }else{
       body = `<div class="fav-body" style="padding:18px;color:rgba(255,255,255,.6)">无法预览此类型收藏</div>`;
     }
